@@ -16,32 +16,35 @@ public class PaymentEventConsumer {
     private final PaymentEventRepository paymentEventRepository;
 
 
-//    @KafkaListener(topics = "${app.kafka.topic.payment-event}", groupId = "payment-group")
-//    public void debugConsumer(String message) {
-//        log.info("📩 Kafka 메시지 내용 확인: {}", message);
-//    }
-//
-//    @KafkaListener(
-//            topics = "${app.kafka.topic.payment-event}",
-//            groupId = "payment-consumer-group",
-//            containerFactory = "paymentEventKafkaListenerContainerFactory"
-//    )
-//
-//    @Transactional
-//    public void consume(PaymentEventDTO dto) {
-//        // 실제 처리 로직은 여기에 작성 (예: DB 저장)
-//        PaymentEvent e = PaymentEvent.builder()
-//                .checkout_id(dto.getCheckout_id())
-//                .buyer_id("aa1123")
-//                .seller_id("aa445")
-//                .amount(dto.getAmount())
-//                .build();
-//
-//        try{
-//            paymentEventRepository.save(e);
-//            log.info("✅ Consumer PaymentEvent DTO 저장 완료");
-//        }catch(Exception ex){
-//            log.error("저장 실패 - {}",ex);
-//        }
-//    }
+    @KafkaListener(topics = "${app.kafka.topic.payment-event}", groupId = "payment-group")
+    public void debugConsumer(String message) {
+        log.info("📩 Kafka 메시지 내용 확인: {}", message);
+    }
+
+    @KafkaListener(
+            topics = "${app.kafka.topic.payment-event}",
+            groupId = "payment-consumer-group",
+            containerFactory = "paymentEventKafkaListenerContainerFactory"
+    )
+
+    @Transactional
+    public void consume(PaymentEventDTO dto) {
+        // 실제 처리 로직은 여기에 작성 (예: DB 저장)
+        PaymentEvent e = PaymentEvent.builder()
+                .festival_id(dto.getFestivalId())
+                .payment_id(dto.getPaymentId())
+                .buyer_id("aa1123")
+                .seller_id(dto.getSeller_id())
+                .event_type(dto.getEventType())
+                .currency(dto.getCurrency())
+                .amount(dto.getAmount())
+                .build();
+
+        try{
+            paymentEventRepository.save(e);
+            log.info("✅ Consumer PaymentEvent DTO 저장 완료");
+        }catch(Exception ex){
+            log.error("저장 실패 - {}",ex);
+        }
+    }
 }

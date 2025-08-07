@@ -10,6 +10,8 @@ public class PortoneWebhookDTO {
     private CustomData customData;
 
     public static class CustomData{
+        private Long seller_id;
+        private String amount;
 
     }
 }

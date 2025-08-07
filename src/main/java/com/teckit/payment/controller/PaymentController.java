@@ -2,7 +2,9 @@ package com.teckit.payment.controller;
 
 import com.teckit.payment.dto.request.PaymentEventDTO;
 import com.teckit.payment.dto.request.PortoneWebhookDTO;
+//import com.teckit.payment.kafka.PaymentEventProducer;
 import com.teckit.payment.kafka.PaymentEventProducer;
+import com.teckit.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -18,11 +20,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Slf4j
 public class PaymentController {
     private final PaymentEventProducer producer;
+    private final PaymentService paymentService;
 
-    @PostMapping("/event")
-    public ResponseEntity<String> createEvent(@RequestBody PaymentEventDTO dto) {
+    @PostMapping("/request")
+    public ResponseEntity<String> requestPayment(@RequestBody PaymentEventDTO dto){
         producer.send(dto);
-        return ResponseEntity.ok("✅ 이벤트 전송 완료");
+        return ResponseEntity.ok("✅ 웹훅 수신 완료");
     }
 
     @PostMapping("/webhook")

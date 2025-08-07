@@ -19,6 +19,8 @@ public class PaymentEvent {
     @Id
     private String eId;
 
+    private String festival_id;
+
     @Column(name = "payment_id",nullable = false)
     private String payment_id;
 
@@ -32,7 +34,9 @@ public class PaymentEvent {
     private String amount;
 
     @Column(nullable = false)
-//    어떻게 연동되는지 파악한 후 타입 변경
+    private String currency;
+
+    @Column(nullable = false)
     private String event_type; // ex: payment.requested, payment.failed
 
     @Column(nullable = false)

@@ -46,7 +46,7 @@ public class KafkaConsumerConfig {
         return factory;
     }
 
-    // 🔹 RefundEvent Consumer 설정
+//     🔹 RefundEvent Consumer 설정
 //    @Bean
 //    public ConsumerFactory<String, RefundEventDTO> refundEventConsumerFactory() {
 //        JsonDeserializer<RefundEventDTO> deserializer = new JsonDeserializer<>(RefundEventDTO.class);

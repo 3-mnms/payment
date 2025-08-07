@@ -17,7 +17,7 @@ public class PaymentEventProducer {
     private String topic;
 
     public void send(PaymentEventDTO dto) {
-        kafkaTemplate.send(topic, dto.getCheckout_id(), dto);
+        kafkaTemplate.send(topic, dto.getPaymentId(),dto);
         System.out.println("✅ PaymentEvent 전송 완료: " + dto);
     }
 }

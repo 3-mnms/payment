@@ -16,6 +16,7 @@ public class PaymentOrder {
 
     private String tx_id;
 
+//    얘네를 어떻게 보내줄 것인지
     private String buyer_id;
 
     private String seller_id;
