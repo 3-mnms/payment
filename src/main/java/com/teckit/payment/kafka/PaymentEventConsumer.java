@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -16,10 +18,10 @@ public class PaymentEventConsumer {
     private final PaymentEventRepository paymentEventRepository;
 
 
-    @KafkaListener(topics = "${app.kafka.topic.payment-event}", groupId = "payment-group")
-    public void debugConsumer(String message) {
-        log.info("📩 Kafka 메시지 내용 확인: {}", message);
-    }
+//    @KafkaListener(topics = "${app.kafka.topic.payment-event}", groupId = "payment-group")
+//    public void debugConsumer(String message) {
+//        log.info("📩 Kafka 메시지 내용 확인: {}", message);
+//    }
 
     @KafkaListener(
             topics = "${app.kafka.topic.payment-event}",
@@ -30,14 +32,18 @@ public class PaymentEventConsumer {
     @Transactional
     public void consume(PaymentEventDTO dto) {
         // 실제 처리 로직은 여기에 작성 (예: DB 저장)
+        LocalDateTime now = LocalDateTime.now();
+
         PaymentEvent e = PaymentEvent.builder()
-                .festival_id(dto.getFestivalId())
-                .payment_id(dto.getPaymentId())
-                .buyer_id("aa1123")
-                .seller_id(dto.getSeller_id())
-                .event_type(dto.getEventType())
+                .festivalId(dto.getFestivalId())
+                .paymentId(dto.getPaymentId())
+                .buyerId("aa1123")
+                .sellerId(dto.getSellerId())
+                .eventType(dto.getEventType())
                 .currency(dto.getCurrency())
                 .amount(dto.getAmount())
+                .payMethod(dto.getPayMethod())
+                .timestamp(now)
                 .build();
 
         try{

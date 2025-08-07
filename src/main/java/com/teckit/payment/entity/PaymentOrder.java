@@ -1,39 +1,54 @@
 package com.teckit.payment.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 //결제 실행자는 결제 주문을 데이터베이스에 저장.
 // webhook으로 받아와야 할 것 같음.
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Setter
 public class PaymentOrder {
     @Id
-    private String payment_id;
+    @Column(name = "payment_id")
+    private String paymentId;
 
-    private String tx_id;
+    @Column(name = "tx_id", nullable = false)
+    private String txId;
 
-//    얘네를 어떻게 보내줄 것인지
-    private String buyer_id;
+    //    얘네를 어떻게 보내줄 것인지
+    @Column(name = "buyer_id", nullable = false)
+    private String buyerId;
 
-    private String seller_id;
+    @Column(name = "seller_id", nullable = false)
+    private String sellerId;
 
+    @Column(nullable = false)
     private String amount;
 
+    @Column(nullable = false)
     private String currency;
 
-    private String pay_method;
+    @Column(name = "pay_method", nullable = false)
+    private String payMethod;
 
+    //    추후 enum 으로 변경
+    @Column(name = "payment_order_status", nullable = false)
+    private String paymentOrderStatus;
 
-//    추후 enum 으로 변경
-    private String payment_order_status;
+    @Column(name = "ledger_updated", nullable = false)
+    private boolean ledgerUpdated;
 
-    private boolean ledger_updated;
+    @Column(name = "wallet_updated", nullable = false)
+    private boolean walletUpdated;
 
-    private boolean wallet_updated;
-
-    private LocalDateTime last_updated_at;
+    @Column(name = "last_updated_at", nullable = false)
+    private LocalDateTime lastUpdatedAt;
 }

@@ -1,11 +1,9 @@
 package com.teckit.payment.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -13,31 +11,37 @@ import java.time.LocalDateTime;
 //결제 이벤트가 발생했을 때 해당 이벤트를 저장하는 DB
 @Entity
 @Builder
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentEvent {
     @Id
-    private String eId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long eId;
 
-    private String festival_id;
+    @Column(name = "festival_id")
+    private String festivalId;
 
     @Column(name = "payment_id",nullable = false)
-    private String payment_id;
+    private String paymentId;
 
-    @Column(nullable = false)
-    private String buyer_id;
+    @Column(name = "buyer_id", nullable = false)
+    private String buyerId;
 
-    @Column(nullable = false)
-    private String seller_id;
+    @Column(name="seller_id",nullable = false)
+    private String sellerId;
 
     @Column(nullable = false)
     private String amount;
 
+    @Column(name="pay_method" ,nullable = false)
+    private String payMethod;
+
     @Column(nullable = false)
     private String currency;
 
-    @Column(nullable = false)
-    private String event_type; // ex: payment.requested, payment.failed
+    @Column(name = "event_type", nullable = false)
+    private String eventType; // ex: payment.requested, payment.failed
 
     @Column(nullable = false)
     private LocalDateTime timestamp;

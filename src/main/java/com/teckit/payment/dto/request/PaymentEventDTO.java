@@ -1,11 +1,13 @@
 package com.teckit.payment.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
-import lombok.Getter;
+import lombok.*;
 
 @Data
+@Builder
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class PaymentEventDTO {
 //    공연 이름
     @NotBlank
@@ -19,7 +21,7 @@ public class PaymentEventDTO {
     private String amount;
 
     @NotBlank
-    private String seller_id;
+    private String sellerId;
 
     @NotBlank
     private String currency;

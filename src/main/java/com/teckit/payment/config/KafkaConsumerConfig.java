@@ -29,7 +29,7 @@ public class KafkaConsumerConfig {
         JsonDeserializer<PaymentEventDTO> deserializer = new JsonDeserializer<>(PaymentEventDTO.class);
         deserializer.setRemoveTypeHeaders(false);
         deserializer.addTrustedPackages("*");
-        deserializer.setUseTypeMapperForKey(true);
+
 
         Map<String, Object> config = new HashMap<>();
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaAddress);
