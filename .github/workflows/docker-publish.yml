@@ -7,7 +7,7 @@ on:
 env:
   IMAGE: ${{ secrets.DOCKER_USERNAME }}/payment
   SERVICE: payment-test
-  DEVOPS_REPO: 3-mnms/devops-playground
+  DEVOPS_REPO: 3-mnms/devops
 
 jobs:
   build-push:
