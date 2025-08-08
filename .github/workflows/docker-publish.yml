@@ -1,12 +1,13 @@
-name: 💰 payment Docker & Dispatch (test)
+name: "💰 payment Docker & Dispatch"
 
 on:
   push:
     branches: [ 'feature/MNMS-301' ]
+  workflow_dispatch: {}
 
 env:
   IMAGE: ${{ secrets.DOCKER_USERNAME }}/api-payment
-  SERVICE: payment-test
+  SERVICE: payment
   DEVOPS_REPO: 3-mnms/gitops-repo
 
 jobs:
@@ -39,7 +40,8 @@ jobs:
           tags: |
             ${{ env.IMAGE }}:${{ env.TAG }}
 
-      - uses: peter-evans/repository-dispatch@v3
+      - name: Dispatch to gitops-repo
+        uses: peter-evans/repository-dispatch@v3
         with:
           token:  ${{ secrets.GH_PAT }}
           repository: ${{ env.DEVOPS_REPO }}
@@ -48,5 +50,6 @@ jobs:
             {
               "service": "${{ env.SERVICE }}",
               "image":   "${{ env.IMAGE }}",
-              "tag":     "${{ env.TAG }}"
+              "tag":     "${{ env.TAG }}",
+              "targetBranch": "feature/MNMS-299"
             }
