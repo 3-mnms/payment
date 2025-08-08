@@ -5,7 +5,7 @@ on:
     branches: [ 'feature/MNMS-301' ]
 
 env:
-  IMAGE: ${{ secrets.DOCKER_USERNAME }}/payment
+  IMAGE: ${{ secrets.DOCKER_USERNAME }}/api-payment
   SERVICE: payment-test
   DEVOPS_REPO: 3-mnms/gitops-repo
 
