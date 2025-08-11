@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -18,5 +19,7 @@ public interface PaymentOrderRepository extends JpaRepository<PaymentOrder, Stri
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM PaymentOrder p WHERE p.paymentId = :paymentId")
     Optional<PaymentOrder> findByPaymentIdForUpdate(@Param("paymentId") String paymentId);
+
+    List<PaymentOrder> findByFestivalIdAndBuyerIdAndLedgerUpdatedTrueAndWalletUpdatedTrue(String festivalId, String buyerId);
 
 }

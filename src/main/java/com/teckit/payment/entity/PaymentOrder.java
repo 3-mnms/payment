@@ -46,6 +46,7 @@ public class PaymentOrder {
 
     //    추후 enum 으로 변경
     @Column(name = "payment_order_status", nullable = false)
+    @Enumerated(EnumType.STRING)
     private PaymentOrderStatus paymentOrderStatus=PaymentOrderStatus.Requested;
 
     @Column(name = "ledger_updated", nullable = false)

@@ -3,6 +3,7 @@ package com.teckit.payment.controller;
 import com.teckit.payment.dto.request.PaymentEventDTO;
 import com.teckit.payment.dto.request.PortoneWebhookDTO;
 //import com.teckit.payment.kafka.producer.PaymentEventProducer;
+import com.teckit.payment.dto.response.PaymentOrderDTO;
 import com.teckit.payment.entity.PaymentEvent;
 import com.teckit.payment.entity.PaymentOrder;
 import com.teckit.payment.exception.BusinessException;
@@ -20,6 +21,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Controller
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
@@ -27,8 +30,13 @@ import org.springframework.web.bind.annotation.*;
 public class PaymentController {
     private final PaymentEventProducer paymentEventProducer;
 
-    private final PaymentOrderRepository paymentOrderRepository;
     private final PaymentOrchestrationService paymentOrchestrationService;
+
+    @GetMapping("/${festivalId}")
+    public ResponseEntity<SuccessResponse<List<PaymentOrderDTO>>> getPaymentOrder(@PathVariable String festivalId){
+        List<PaymentOrderDTO> paymentOrderList = paymentOrchestrationService.getPaymentOrderByFestivalId(festivalId);
+        return ApiResponseUtil.success(paymentOrderList);
+    }
 
     @PostMapping("/request")
     public ResponseEntity<SuccessResponse<String>> requestPayment(@RequestBody PaymentEventDTO dto) {
@@ -42,8 +50,7 @@ public class PaymentController {
                                                  @RequestHeader("webhook-signature") String webhookSignature,
                                                  @RequestHeader("webhook-timestamp") String webhookTimestamp
     ) {
-        boolean exists = paymentOrderRepository.existsByPaymentId(payload.getPayment_id());
-        if (!exists) {
+        if (!paymentOrchestrationService.getExistByPaymentId(payload.getPayment_id())) {
             throw new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID);
         }
 

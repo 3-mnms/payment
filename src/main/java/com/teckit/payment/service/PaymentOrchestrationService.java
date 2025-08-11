@@ -5,6 +5,7 @@ import com.teckit.payment.config.PortOneClient;
 import com.teckit.payment.dto.request.PaymentEventDTO;
 import com.teckit.payment.dto.request.PortoneWebhookDTO;
 import com.teckit.payment.dto.request.SettlementCommandDTO;
+import com.teckit.payment.dto.response.PaymentOrderDTO;
 import com.teckit.payment.dto.response.PortoneSingleResponseDTO;
 import com.teckit.payment.entity.Ledger;
 import com.teckit.payment.entity.PaymentOrder;
@@ -27,7 +28,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.web.client.RestClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -41,7 +41,6 @@ import java.util.Objects;
 @Slf4j
 public class PaymentOrchestrationService {
     //    repository
-    private final PaymentEventRepository paymentEventRepository;
     private final PaymentOrderRepository paymentOrderRepository;
     private final LedgerRepository ledgerRepository;
     private final WalletRepository walletRepository;
@@ -58,6 +57,24 @@ public class PaymentOrchestrationService {
 
     PortOneClient portOneClient;
     private final EntityManager em;
+
+    public List<PaymentOrderDTO> getPaymentOrderByFestivalId(String festivalId) {
+         return paymentOrderRepository.findByFestivalIdAndBuyerIdAndLedgerUpdatedTrueAndWalletUpdatedTrue(festivalId, "1")
+                 .stream().map((po)->{
+                     return PaymentOrderDTO.builder()
+                             .paymentId(po.getPaymentId())
+                             .amount(po.getAmount())
+                             .currency(po.getCurrency())
+                             .payMethod(po.getPayMethod())
+                             .payTime(po.getLastUpdatedAt())
+                             .build();
+                 }).toList();
+    }
+
+    public boolean getExistByPaymentId(String paymentId){
+        return paymentOrderRepository.existsByPaymentId(paymentId);
+
+    }
 
     @Transactional
     public void completeConfirm(String paymentId){
@@ -156,17 +173,6 @@ public class PaymentOrchestrationService {
                 .build();
     }
 
-    //    enum 형식으로 바꾸기
-//    private PaymentOrderStatus changeStatusForm(String status) {
-//        if (status == null) throw new IllegalArgumentException("null status occured");
-//
-//        return switch (status) {
-//            case "Paid" -> PaymentOrderStatus.Paid;
-//            case "Failed" -> PaymentOrderStatus.Failed;
-//            case "Cancelled" -> PaymentOrderStatus.Cancelled;
-//            default -> throw new IllegalArgumentException("Unknown status: " + status);
-//        };
-//    }
 
     @Transactional
     public void paymentComplete(SettlementCommandDTO dto){
