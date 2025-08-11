@@ -1,5 +1,6 @@
 package com.teckit.payment.entity;
 
+import com.teckit.payment.enumeration.PaymentOrderStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 //결제 이벤트가 발생했을 때 해당 이벤트를 저장하는 DB
-@Entity
+@Entity(name = "payment_event")
 @Builder
 @Getter
 @NoArgsConstructor
@@ -32,7 +33,7 @@ public class PaymentEvent {
     private String sellerId;
 
     @Column(nullable = false)
-    private String amount;
+    private Long amount;
 
     @Column(name="pay_method" ,nullable = false)
     private String payMethod;
@@ -41,9 +42,14 @@ public class PaymentEvent {
     private String currency;
 
     @Column(name = "event_type", nullable = false)
-    private String eventType; // ex: payment.requested, payment.failed
+    @Enumerated(EnumType.STRING)
+    private PaymentOrderStatus eventType; // ex: payment.requested, payment.failed
 
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
+    @PrePersist
+    public void prePersist() {
+        this.timestamp = LocalDateTime.now();
+    }
 }

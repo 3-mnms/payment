@@ -1,6 +1,8 @@
 package com.teckit.payment.dto.request;
 
+import com.teckit.payment.enumeration.PaymentOrderStatus;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Data
@@ -15,10 +17,11 @@ public class PaymentEventDTO {
     @NotBlank
     private String festivalId;
 
-    @NotBlank
-    private String eventType;
-    @NotBlank
-    private String amount;
+    @NotNull
+    private PaymentOrderStatus eventType;
+
+    @NotNull
+    private Long amount;
 
     @NotBlank
     private String sellerId;

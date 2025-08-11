@@ -9,7 +9,5 @@ import java.util.Optional;
 @Repository
 public interface PaymentEventRepository extends JpaRepository<PaymentEvent,String> {
     Optional<PaymentEvent> findByPaymentId(String paymentId);
-
-
-
+    Optional<PaymentEvent> findTopByPaymentIdOrderByTimestampDesc(String paymentId);
 }
