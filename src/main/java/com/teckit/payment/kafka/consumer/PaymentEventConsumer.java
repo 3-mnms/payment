@@ -1,6 +1,7 @@
 package com.teckit.payment.kafka.consumer;
 
 import com.teckit.payment.dto.request.PaymentEventDTO;
+import com.teckit.payment.dto.request.PaymentEventMessage;
 import com.teckit.payment.entity.PaymentEvent;
 import com.teckit.payment.repository.PaymentEventRepository;
 import com.teckit.payment.service.PaymentEventService;
@@ -24,9 +25,9 @@ public class PaymentEventConsumer {
             groupId = "payment-consumer-group",
             containerFactory = "paymentEventKafkaListenerContainerFactory"
     )
-    public void consume(PaymentEventDTO dto) {
+    public void consume(PaymentEventMessage paymentEventMessage) {
         // 실제 처리 로직은 여기에 작성 (예: DB 저장)
-        paymentOrchestrationService.handlePaymentRequested(dto);
-        log.info("✅ Payment Event 요청이 성공적으로 완료되었습니다. {}", dto);
+        paymentOrchestrationService.handlePaymentRequested(paymentEventMessage);
+        log.info("✅ Payment Event 요청이 성공적으로 완료되었습니다. {}", paymentEventMessage);
     }
 }

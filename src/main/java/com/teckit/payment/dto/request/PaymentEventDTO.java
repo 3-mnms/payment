@@ -24,7 +24,7 @@ public class PaymentEventDTO {
     private Long amount;
 
     @NotBlank
-    private String sellerId;
+    private Long sellerId;
 
     @NotBlank
     private String currency;

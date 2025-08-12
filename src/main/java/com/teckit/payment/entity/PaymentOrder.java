@@ -30,10 +30,10 @@ public class PaymentOrder {
 
     //    얘네를 어떻게 보내줄 것인지
     @Column(name = "buyer_id", nullable = false)
-    private String buyerId;
+    private Long buyerId;
 
     @Column(name = "seller_id", nullable = false)
-    private String sellerId;
+    private Long sellerId;
 
     @Column(nullable = false)
     private Long amount;

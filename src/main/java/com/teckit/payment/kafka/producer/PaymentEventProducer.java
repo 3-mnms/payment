@@ -1,6 +1,7 @@
 package com.teckit.payment.kafka.producer;
 
 import com.teckit.payment.dto.request.PaymentEventDTO;
+import com.teckit.payment.dto.request.PaymentEventMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -13,13 +14,13 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class PaymentEventProducer {
     @Qualifier("paymentEventKafkaTemplate")
-    private final KafkaTemplate<String, PaymentEventDTO> paymentEventKafkaTemplate;
+    private final KafkaTemplate<String, PaymentEventMessage> paymentEventKafkaTemplate;
 
     @Value("${app.kafka.topic.payment-event}")
     private String topic;
 
-    public void send(PaymentEventDTO dto) {
-        paymentEventKafkaTemplate.send(topic, dto.getPaymentId(),dto);
-        log.info("✅ PaymentEvent 전송 완료: " + dto);
+    public void send(PaymentEventMessage paymentEventMessage) {
+        paymentEventKafkaTemplate.send(topic, paymentEventMessage.getPaymentEventDTO().getPaymentId() ,paymentEventMessage);
+        log.info("✅ PaymentEvent 전송 완료: " + paymentEventMessage);
     }
 }

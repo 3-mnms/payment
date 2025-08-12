@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.Locale;
 
 public enum PaymentOrderStatus {
-    Requested, Paid, Failed, Cancelled,Ready;
+    Requested, Paid, Failed, Cancelled,Ready,Rejected;
 
     @JsonCreator
     public static PaymentOrderStatus from(String raw) {
@@ -18,6 +18,7 @@ public enum PaymentOrderStatus {
             case "FAILED":    return Failed;
             case "CANCELLED": return Cancelled;
             case "READY":     return Ready;
+            case "REJECTED": return Rejected;
             default: throw new IllegalArgumentException("Unsupported PaymentOrderStatus: " + raw);
         }
     }

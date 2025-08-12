@@ -27,10 +27,10 @@ public class PaymentEvent {
     private String paymentId;
 
     @Column(name = "buyer_id", nullable = false)
-    private String buyerId;
+    private Long buyerId;
 
     @Column(name="seller_id",nullable = false)
-    private String sellerId;
+    private Long sellerId;
 
     @Column(nullable = false)
     private Long amount;

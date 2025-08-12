@@ -2,6 +2,7 @@ package com.teckit.payment.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.teckit.payment.dto.response.PaymentCancelDTO;
 import com.teckit.payment.dto.response.PortoneErrorDTO;
 import com.teckit.payment.dto.response.PortoneSingleResponseDTO;
 import com.teckit.payment.exception.BusinessException;
@@ -45,5 +46,13 @@ public class PortOneClient {
                     };
                 })
                 .body(PortoneSingleResponseDTO.class);
+    }
+
+    public PaymentCancelDTO cancelPayment(String paymentId){
+        return portOneClient.post()
+                .uri("/payments/{paymentId}/cancel", paymentId)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (req, res) -> {})
+                .body(PaymentCancelDTO.class);
     }
 }

@@ -21,7 +21,7 @@ public class Ledger {
     private String transactionType; // 예: DEBIT, CREDIT
 
     @Column(name="user_id")
-    private String userId;// 해당 거래의 대상
+    private Long userId;// 해당 거래의 대상
 
     @NotNull
     private Long amount;

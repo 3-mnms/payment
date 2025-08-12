@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Wallet {
     @Id
-    private String user_id; // 판매자 또는 사용자 계정
+    private Long user_id; // 판매자 또는 사용자 계정
 
     @Column(name="total_received_amount")
     private Long totalReceivedAmount = 0L; // 수신 누적 총액
@@ -32,7 +32,7 @@ public class Wallet {
     @Column(name = "last_updated_at")
     private LocalDateTime lastUpdatedAt;
 
-    public Wallet(String buyerId) {
+    public Wallet(Long buyerId) {
         this.user_id = buyerId;
     }
 

@@ -3,8 +3,10 @@ package com.teckit.payment.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.teckit.payment.config.PortOneClient;
 import com.teckit.payment.dto.request.PaymentEventDTO;
+import com.teckit.payment.dto.request.PaymentEventMessage;
 import com.teckit.payment.dto.request.PortoneWebhookDTO;
 import com.teckit.payment.dto.request.SettlementCommandDTO;
+import com.teckit.payment.dto.response.PaymentCancelDTO;
 import com.teckit.payment.dto.response.PaymentOrderDTO;
 import com.teckit.payment.dto.response.PortoneSingleResponseDTO;
 import com.teckit.payment.entity.Ledger;
@@ -58,37 +60,55 @@ public class PaymentOrchestrationService {
     PortOneClient portOneClient;
     private final EntityManager em;
 
-    public List<PaymentOrderDTO> getPaymentOrderByFestivalId(String festivalId) {
-         return paymentOrderRepository.findByFestivalIdAndBuyerIdAndLedgerUpdatedTrueAndWalletUpdatedTrue(festivalId, "1")
-                 .stream().map((po)->{
-                     return PaymentOrderDTO.builder()
-                             .paymentId(po.getPaymentId())
-                             .amount(po.getAmount())
-                             .currency(po.getCurrency())
-                             .payMethod(po.getPayMethod())
-                             .payTime(po.getLastUpdatedAt())
-                             .build();
-                 }).toList();
-    }
-
-    public boolean getExistByPaymentId(String paymentId){
-        return paymentOrderRepository.existsByPaymentId(paymentId);
-
-    }
-
-    @Transactional
-    public void completeConfirm(String paymentId){
-        PaymentOrder po=paymentOrderRepository.findByPaymentId(paymentId)
-                .orElseThrow(()->new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
+    public void paymentCancel(String paymentId, Long userId) {
+//        1. paymentOrder에서 paymentId에 해당하는 entity의 Status가 Paid인지 확인
+        PaymentOrder paymentOrder = paymentOrderRepository.findByPaymentId(paymentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
 
         PortoneSingleResponseDTO res = portOneClient.getPayment(paymentId);
 
-        if(res==null){
+
+        if (!paymentOrder.getPaymentOrderStatus().equals(PaymentOrderStatus.Paid) || !res.getStatus().equals("PAID")
+        ) {
+            throw new BusinessException(ErrorCode.NOT_PAID_ORDER);
+        }
+//        결제 단건 조회 ?
+
+        PaymentCancelDTO paymentCancelDTO = portOneClient.cancelPayment(paymentId);
+
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaymentOrderDTO> getPaymentOrderByFestivalId(String festivalId, Long buyerId) {
+        return paymentOrderRepository.findByFestivalIdAndBuyerIdAndLedgerUpdatedTrueAndWalletUpdatedTrue(festivalId, buyerId)
+                .stream().map((po) -> {
+                    return PaymentOrderDTO.builder()
+                            .paymentId(po.getPaymentId())
+                            .amount(po.getAmount())
+                            .currency(po.getCurrency())
+                            .payMethod(po.getPayMethod())
+                            .payTime(po.getLastUpdatedAt())
+                            .build();
+                }).toList();
+    }
+
+    public boolean getExistByPaymentId(String paymentId) {
+        return paymentOrderRepository.existsByPaymentId(paymentId);
+    }
+
+    @Transactional
+    public void completeConfirm(String paymentId) {
+        PaymentOrder po = paymentOrderRepository.findByPaymentId(paymentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
+
+        PortoneSingleResponseDTO res = portOneClient.getPayment(paymentId);
+
+        if (res == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID);
         }
-        log.info("✅ [PortOne] 응답 값 : {}",res);
+        log.info("✅ [PortOne] 응답 값 : {}", res);
 
-        if(!"Paid".equalsIgnoreCase(res.getStatus())){
+        if (!"Paid".equalsIgnoreCase(res.getStatus())) {
             throw new BusinessException(ErrorCode.NOT_INVALID_PAYMNET_BY_PORTONE);
         }
 
@@ -102,7 +122,7 @@ public class PaymentOrchestrationService {
         em.refresh(po);
 
         log.info("");
-        if(!po.isLedgerUpdated()||!po.isWalletUpdated()){
+        if (!po.isLedgerUpdated() || !po.isWalletUpdated()) {
             throw new BusinessException(ErrorCode.NOT_SETTLED_PAYMENT);
         }
     }
@@ -114,11 +134,18 @@ public class PaymentOrchestrationService {
      * PaymentOrder 없으면 생성
      */
     @Transactional
-    public void handlePaymentRequested(PaymentEventDTO dto) {
+    public void handlePaymentRequested(PaymentEventMessage paymentEventMessage) {
 //        paymentEvent 저장
-        paymentEventService.savePaymentEvent(dto);
-        paymentOrderRepository.findByPaymentId(dto.getPaymentId())
-                .orElseGet(() -> paymentOrderService.createIfAbsent(dto));
+        paymentEventService.savePaymentEvent(paymentEventMessage);
+
+        if (Objects.equals(paymentEventMessage.getPaymentEventDTO().getSellerId(), paymentEventMessage.getUserId())) {
+            paymentEventMessage.getPaymentEventDTO().setEventType(PaymentOrderStatus.Rejected);
+            paymentEventService.savePaymentEvent(paymentEventMessage);
+            return;
+        }
+
+        paymentOrderRepository.findByPaymentId(paymentEventMessage.getPaymentEventDTO().getPaymentId())
+                .orElseGet(() -> paymentOrderService.createIfAbsent(paymentEventMessage));
     }
 
     /**
@@ -128,37 +155,40 @@ public class PaymentOrchestrationService {
     public void handleWebhook(PortoneWebhookDTO payload) {
 //        payload에서 값 추출
         final String paymentId = payload.getPayment_id();
-        final String txId=payload.getTx_id();
+        final String txId = payload.getTx_id();
         final PaymentOrderStatus status = payload.getStatus();
 
         PaymentOrder paymentOrder = paymentOrderRepository.findByPaymentId(paymentId)
-                .orElseThrow(()->new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
 
         paymentOrderService.changeStatus(paymentOrder, status);
-        paymentOrderService.updateTxIdIfAbsent(paymentOrder,txId);
+        paymentOrderService.updateTxIdIfAbsent(paymentOrder, txId);
 
 //        Paymnet Event 생성
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-        @Override
+            @Override
             public void afterCommit() {
-            PaymentEventDTO paymentEventDTO = PaymentEventDTO.builder()
-                    .paymentId(paymentId)
-                    .festivalId(paymentOrder.getFestivalId())
-                    .eventType(paymentOrder.getPaymentOrderStatus())
-                    .amount(paymentOrder.getAmount())
-                    .sellerId(paymentOrder.getSellerId())
-                    .currency(paymentOrder.getCurrency())
-                    .payMethod(paymentOrder.getPayMethod())
-                    .build();
-
+                PaymentEventDTO paymentEventDTO = PaymentEventDTO.builder()
+                        .paymentId(paymentId)
+                        .festivalId(paymentOrder.getFestivalId())
+                        .eventType(paymentOrder.getPaymentOrderStatus())
+                        .amount(paymentOrder.getAmount())
+                        .sellerId(paymentOrder.getSellerId())
+                        .currency(paymentOrder.getCurrency())
+                        .payMethod(paymentOrder.getPayMethod())
+                        .build();
+                Long userId = paymentOrder.getBuyerId();
 //            paymentEvent 추가 발행
-            paymentEventProducer.send(paymentEventDTO);
+                paymentEventProducer.send(PaymentEventMessage.builder()
+                        .paymentEventDTO(paymentEventDTO)
+                        .userId(userId)
+                        .build());
 
 //            결제 완료 됐을 때, Legder, Wallet 갱신 이벤트 발행
-            if (PaymentOrderStatus.Paid.equals(paymentOrder.getPaymentOrderStatus())) {
-                settlementProducer.send(buildSettlementCmd(paymentOrder));
+                if (PaymentOrderStatus.Paid.equals(paymentOrder.getPaymentOrderStatus())) {
+                    settlementProducer.send(buildSettlementCmd(paymentOrder));
+                }
             }
-        }
         });
     }
 
@@ -175,18 +205,18 @@ public class PaymentOrchestrationService {
 
 
     @Transactional
-    public void paymentComplete(SettlementCommandDTO dto){
+    public void paymentComplete(SettlementCommandDTO dto) {
         final String paymentId = dto.getPaymentId();
         final String txId = dto.getTxId();
-        final String sellerId = dto.getSellerId();
-        final String buyerId = dto.getBuyerId();
+        final Long sellerId = dto.getSellerId();
+        final Long buyerId = dto.getBuyerId();
         final Long amount = dto.getAmount();
         final String currency = dto.getCurrency();
 
         PaymentOrder order = paymentOrderRepository.findByPaymentIdForUpdate(paymentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
 
-        if (order.isLedgerUpdated() &&order.isWalletUpdated()) return;
+        if (order.isLedgerUpdated() && order.isWalletUpdated()) return;
 
         try {
             ledgerRepository.saveAll(List.of(
@@ -205,10 +235,10 @@ public class PaymentOrchestrationService {
 
 //        PaymentOrder ledger_updated true로 바꿔야 됨
 
-        Wallet buyer  = walletRepository.findById(buyerId).orElseGet(() -> new Wallet(buyerId));
+        Wallet buyer = walletRepository.findById(buyerId).orElseGet(() -> new Wallet(buyerId));
         Wallet seller = walletRepository.findById(sellerId).orElseGet(() -> new Wallet(sellerId));
 
-        buyer.setTotalPaidAmount(   nz(buyer.getTotalPaidAmount())    + amount);
+        buyer.setTotalPaidAmount(nz(buyer.getTotalPaidAmount()) + amount);
         seller.setTotalReceivedAmount(nz(seller.getTotalReceivedAmount()) + amount);
 
         walletRepository.save(buyer);
@@ -217,6 +247,8 @@ public class PaymentOrchestrationService {
         order.setWalletUpdated(true);
     }
 
-    private long nz(Long v) { return v == null ? 0L : v; }
+    private long nz(Long v) {
+        return v == null ? 0L : v;
+    }
 
 }

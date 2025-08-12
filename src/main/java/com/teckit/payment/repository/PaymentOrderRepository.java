@@ -20,6 +20,6 @@ public interface PaymentOrderRepository extends JpaRepository<PaymentOrder, Stri
     @Query("SELECT p FROM PaymentOrder p WHERE p.paymentId = :paymentId")
     Optional<PaymentOrder> findByPaymentIdForUpdate(@Param("paymentId") String paymentId);
 
-    List<PaymentOrder> findByFestivalIdAndBuyerIdAndLedgerUpdatedTrueAndWalletUpdatedTrue(String festivalId, String buyerId);
+    List<PaymentOrder> findByFestivalIdAndBuyerIdAndLedgerUpdatedTrueAndWalletUpdatedTrue(String festivalId, Long buyerId);
 
 }

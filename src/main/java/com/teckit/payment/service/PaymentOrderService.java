@@ -1,6 +1,7 @@
 package com.teckit.payment.service;
 
 import com.teckit.payment.dto.request.PaymentEventDTO;
+import com.teckit.payment.dto.request.PaymentEventMessage;
 import com.teckit.payment.dto.request.PortoneWebhookDTO;
 import com.teckit.payment.entity.PaymentEvent;
 import com.teckit.payment.entity.PaymentOrder;
@@ -38,13 +39,15 @@ public class PaymentOrderService {
 
 
     @Transactional
-    public PaymentOrder createIfAbsent(PaymentEventDTO dto) {
+    public PaymentOrder createIfAbsent(PaymentEventMessage paymentEventMessage) {
+        PaymentEventDTO dto=paymentEventMessage.getPaymentEventDTO();
+        Long buyerId=paymentEventMessage.getUserId();
         // 빠른 경로: 이미 있으면 바로 반환
         return paymentOrderRepository.findByPaymentId(dto.getPaymentId()).orElseGet(() -> {
             try {
                 PaymentOrder po = PaymentOrder.builder()
                         .paymentId(dto.getPaymentId())
-                        .buyerId("aa1123")
+                        .buyerId(buyerId)
                         .festivalId(dto.getFestivalId())// ← 가능하면 DTO에서 받기
                         .sellerId(dto.getSellerId())
                         .amount(dto.getAmount())
