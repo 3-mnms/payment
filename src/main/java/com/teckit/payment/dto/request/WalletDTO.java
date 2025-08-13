@@ -1,6 +1,7 @@
 package com.teckit.payment.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,11 +11,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SettlementCommandDTO {
+public class WalletDTO {
     @NotBlank
-    private String paymentId;
+    private Long sellerId;
     @NotBlank
-    private LedgerDTO ledgerDTO;
-    @NotBlank
-    private WalletDTO walletDTO;
+    private Long buyerId;
+    @NotNull
+    private Long amount;
 }

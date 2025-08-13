@@ -1,20 +1,14 @@
 package com.teckit.payment.controller;
 
-import com.teckit.payment.dto.request.PaymentEventDTO;
-import com.teckit.payment.dto.request.PaymentEventMessage;
+import com.teckit.payment.dto.request.PaymentEventMessageDTO;
 import com.teckit.payment.dto.request.PortoneWebhookDTO;
 //import com.teckit.payment.kafka.producer.PaymentEventProducer;
 import com.teckit.payment.dto.response.PaymentOrderDTO;
-import com.teckit.payment.entity.PaymentEvent;
-import com.teckit.payment.entity.PaymentOrder;
 import com.teckit.payment.exception.BusinessException;
 import com.teckit.payment.exception.ErrorCode;
 import com.teckit.payment.exception.global.SuccessResponse;
 import com.teckit.payment.kafka.producer.PaymentEventProducer;
-import com.teckit.payment.repository.PaymentOrderRepository;
-import com.teckit.payment.service.PaymentEventService;
 import com.teckit.payment.service.PaymentOrchestrationService;
-import com.teckit.payment.service.PaymentOrderService;
 import com.teckit.payment.util.ApiResponseUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +17,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @Controller
 @RequestMapping("/api/payments")
@@ -39,7 +32,7 @@ public class PaymentController {
                                                                  @RequestHeader("X-User-Id") String userIdHeader){
         Long userId = Long.parseLong(userIdHeader); // 또는 Long.valueOf(userIdHeader)
 
-        paymentOrchestrationService.paymentCancel(paymentId,userId);
+//        paymentOrchestrationService.paymentCancel(paymentId,userId);
         return ApiResponseUtil.success();
     }
 
@@ -57,12 +50,12 @@ public class PaymentController {
     public ResponseEntity<SuccessResponse<String>> requestPayment(@RequestBody PaymentEventDTO dto,
                                                                   @RequestHeader("X-User-Id") String userIdHeader) {
         Long userId = Long.parseLong(userIdHeader); // 또는 Long.valueOf(userIdHeader)
-        PaymentEventMessage paymentEventMessage = PaymentEventMessage.builder()
+        PaymentEventMessageDTO paymentEventMessageDTO = PaymentEventMessageDTO.builder()
                 .paymentEventDTO(dto)
                 .userId(userId)
                 .build();
 
-        paymentEventProducer.send(paymentEventMessage);
+        paymentEventProducer.send(paymentEventMessageDTO);
         return ApiResponseUtil.success();
     }
 

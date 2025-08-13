@@ -19,11 +19,15 @@ import java.time.LocalDateTime;
 @Getter
 public class PaymentOrder {
     @Id
-    @Column(name = "payment_id")
+    @Column(name = "payment_id",nullable = false)
     private String paymentId;
 
-    @Column(name = "tx_id", nullable = true)
+    @Column(name="booking_id",nullable = false)
+    private String bookingId;
+
+    @Column(name = "tx_id")
     private String txId;
+
 
     @Column(name = "festival_id",nullable=false)
     private String festivalId;
@@ -57,6 +61,10 @@ public class PaymentOrder {
 
     @Column(name = "last_updated_at", nullable = false)
     private LocalDateTime lastUpdatedAt;
+
+    @OneToOne(mappedBy = "order",fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OrderBy("requestedAt ASC")
+    private PaymentCancellation paymentCancellation;
 
     @PrePersist
     public void prePersist() {

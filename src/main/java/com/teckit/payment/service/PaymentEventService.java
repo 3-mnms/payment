@@ -1,7 +1,6 @@
 package com.teckit.payment.service;
 
-import com.teckit.payment.dto.request.PaymentEventDTO;
-import com.teckit.payment.dto.request.PaymentEventMessage;
+import com.teckit.payment.dto.request.PaymentEventMessageDTO;
 import com.teckit.payment.entity.PaymentEvent;
 import com.teckit.payment.repository.PaymentEventRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +10,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,13 +22,13 @@ public class PaymentEventService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void savePaymentEvent(PaymentEventMessage paymentEventMessage) {
-        PaymentEventDTO dto = paymentEventMessage.getPaymentEventDTO();
+    public void savePaymentEvent(PaymentEventMessageDTO paymentEventMessageDTO) {
+        PaymentEventDTO dto = paymentEventMessageDTO.getPaymentEventDTO();
         PaymentEvent e = PaymentEvent.builder()
                 .festivalId(dto.getFestivalId())
                 .paymentId(dto.getPaymentId())
 //                buyerId는 access token 이용해서
-                .buyerId(paymentEventMessage.getUserId())
+                .buyerId(paymentEventMessageDTO.getUserId())
                 .sellerId(dto.getSellerId())
                 .eventType(dto.getEventType())
                 .currency(dto.getCurrency())

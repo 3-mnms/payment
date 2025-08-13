@@ -34,6 +34,9 @@ public class Ledger {
     @Column(name = "tx_id")
     private String txId;
 
+    @Column(name="booking_id")
+    private String bookingId;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

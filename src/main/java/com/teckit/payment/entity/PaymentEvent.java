@@ -20,11 +20,15 @@ public class PaymentEvent {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long eId;
 
+    @Column(name = "payment_id",nullable = false)
+    private String paymentId;
+
+    @Column(name="booking_id",nullable = false)
+    private String bookingId;
+
     @Column(name = "festival_id")
     private String festivalId;
 
-    @Column(name = "payment_id",nullable = false)
-    private String paymentId;
 
     @Column(name = "buyer_id", nullable = false)
     private Long buyerId;

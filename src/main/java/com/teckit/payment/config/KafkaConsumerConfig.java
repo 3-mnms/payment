@@ -1,6 +1,5 @@
 package com.teckit.payment.config;
 
-import com.teckit.payment.dto.request.PaymentEventDTO;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

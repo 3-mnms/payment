@@ -1,9 +1,6 @@
 package com.teckit.payment.service;
 
-import com.teckit.payment.dto.request.PaymentEventDTO;
-import com.teckit.payment.dto.request.PaymentEventMessage;
-import com.teckit.payment.dto.request.PortoneWebhookDTO;
-import com.teckit.payment.entity.PaymentEvent;
+import com.teckit.payment.dto.request.PaymentEventMessageDTO;
 import com.teckit.payment.entity.PaymentOrder;
 import com.teckit.payment.enumeration.PaymentOrderStatus;
 import com.teckit.payment.repository.PaymentOrderRepository;
@@ -14,7 +11,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -33,32 +29,32 @@ public class PaymentOrderService {
     @Transactional
     public void updateTxIdIfAbsent(PaymentOrder order, String txId) {
         if (txId == null || txId.isBlank()) return;
+
         if (order.getTxId() != null && !order.getTxId().isBlank()) return;
+
         order.setTxId(txId);
     }
 
 
     @Transactional
-    public PaymentOrder createIfAbsent(PaymentEventMessage paymentEventMessage) {
-        PaymentEventDTO dto=paymentEventMessage.getPaymentEventDTO();
-        Long buyerId=paymentEventMessage.getUserId();
+    public PaymentOrder createIfAbsent(PaymentEventMessageDTO paymentEventMessageDTO) {
         // 빠른 경로: 이미 있으면 바로 반환
-        return paymentOrderRepository.findByPaymentId(dto.getPaymentId()).orElseGet(() -> {
+        return paymentOrderRepository.findByPaymentId(paymentEventMessageDTO.getPaymentId()).orElseGet(() -> {
             try {
                 PaymentOrder po = PaymentOrder.builder()
-                        .paymentId(dto.getPaymentId())
-                        .buyerId(buyerId)
-                        .festivalId(dto.getFestivalId())// ← 가능하면 DTO에서 받기
-                        .sellerId(dto.getSellerId())
-                        .amount(dto.getAmount())
-                        .currency(dto.getCurrency())
-                        .payMethod(dto.getPayMethod())
+                        .paymentId(paymentEventMessageDTO.getPaymentId())
+                        .buyerId(paymentEventMessageDTO.getBuyerId())
+                        .festivalId(paymentEventMessageDTO.getFestivalId())// ← 가능하면 DTO에서 받기
+                        .sellerId(paymentEventMessageDTO.getSellerId())
+                        .amount(paymentEventMessageDTO.getAmount())
+                        .currency(paymentEventMessageDTO.getCurrency())
+                        .payMethod(paymentEventMessageDTO.getPayMethod())
                         .paymentOrderStatus(PaymentOrderStatus.Requested)
                         .build();                           // lastUpdatedAt은 엔티티가 자동 세팅
                 return paymentOrderRepository.save(po);
             } catch (DataIntegrityViolationException e) {
                 // 동시성으로 다른 트랜잭션이 먼저 만든 경우
-                return paymentOrderRepository.findByPaymentId(dto.getPaymentId())
+                return paymentOrderRepository.findByPaymentId(paymentEventMessageDTO.getPaymentId())
                         .orElseThrow(() -> e); // 정말 없으면 예외 그대로
             }
         });

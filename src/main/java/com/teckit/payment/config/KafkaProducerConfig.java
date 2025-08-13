@@ -1,8 +1,7 @@
 package com.teckit.payment.config;
 
 
-import com.teckit.payment.dto.request.PaymentEventDTO;
-import com.teckit.payment.dto.request.PaymentEventMessage;
+import com.teckit.payment.dto.request.PaymentEventMessageDTO;
 import com.teckit.payment.dto.request.SettlementCommandDTO;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -36,8 +35,8 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, PaymentEventMessage> paymentEventKafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory(PaymentEventMessage.class));
+    public KafkaTemplate<String, PaymentEventMessageDTO> paymentEventKafkaTemplate() {
+        return new KafkaTemplate<>(producerFactory(PaymentEventMessageDTO.class));
     }
 
     @Bean

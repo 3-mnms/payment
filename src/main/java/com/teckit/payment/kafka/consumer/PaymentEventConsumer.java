@@ -1,18 +1,11 @@
 package com.teckit.payment.kafka.consumer;
 
-import com.teckit.payment.dto.request.PaymentEventDTO;
-import com.teckit.payment.dto.request.PaymentEventMessage;
-import com.teckit.payment.entity.PaymentEvent;
-import com.teckit.payment.repository.PaymentEventRepository;
-import com.teckit.payment.service.PaymentEventService;
+import com.teckit.payment.dto.request.PaymentEventMessageDTO;
 import com.teckit.payment.service.PaymentOrchestrationService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
@@ -25,9 +18,9 @@ public class PaymentEventConsumer {
             groupId = "payment-consumer-group",
             containerFactory = "paymentEventKafkaListenerContainerFactory"
     )
-    public void consume(PaymentEventMessage paymentEventMessage) {
+    public void consume(PaymentEventMessageDTO paymentEventMessageDTO) {
         // 실제 처리 로직은 여기에 작성 (예: DB 저장)
-        paymentOrchestrationService.handlePaymentRequested(paymentEventMessage);
-        log.info("✅ Payment Event 요청이 성공적으로 완료되었습니다. {}", paymentEventMessage);
+        paymentOrchestrationService.handlePaymentRequested(paymentEventMessageDTO);
+        log.info("✅ Payment Event 요청이 성공적으로 완료되었습니다. {}", paymentEventMessageDTO);
     }
 }
