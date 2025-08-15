@@ -43,13 +43,16 @@ public class PaymentOrderService {
             try {
                 PaymentOrder po = PaymentOrder.builder()
                         .paymentId(paymentEventMessageDTO.getPaymentId())
+                        .bookingId(paymentEventMessageDTO.getBookingId())
                         .buyerId(paymentEventMessageDTO.getBuyerId())
                         .festivalId(paymentEventMessageDTO.getFestivalId())// ← 가능하면 DTO에서 받기
                         .sellerId(paymentEventMessageDTO.getSellerId())
                         .amount(paymentEventMessageDTO.getAmount())
                         .currency(paymentEventMessageDTO.getCurrency())
                         .payMethod(paymentEventMessageDTO.getPayMethod())
-                        .paymentOrderStatus(PaymentOrderStatus.Requested)
+                        .paymentOrderStatus(PaymentOrderStatus.Payment_Requested)
+                        .ledgerUpdated(false)
+                        .walletUpdated(false)
                         .build();                           // lastUpdatedAt은 엔티티가 자동 세팅
                 return paymentOrderRepository.save(po);
             } catch (DataIntegrityViolationException e) {

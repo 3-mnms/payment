@@ -11,6 +11,7 @@ import com.teckit.payment.entity.Wallet;
 import com.teckit.payment.enumeration.PaymentOrderStatus;
 import com.teckit.payment.exception.BusinessException;
 import com.teckit.payment.exception.ErrorCode;
+import com.teckit.payment.kafka.producer.PaymentCompleteConfirmProducer;
 import com.teckit.payment.kafka.producer.PaymentEventProducer;
 import com.teckit.payment.kafka.producer.SettlementProducer;
 import com.teckit.payment.repository.LedgerRepository;
@@ -22,6 +23,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -48,9 +50,9 @@ public class PaymentOrchestrationService {
     //    event
     PaymentEventProducer paymentEventProducer;
     SettlementProducer settlementProducer;
+    PaymentCompleteConfirmProducer paymentCompleteConfirmProducer;
 
 //    RestClient
-
     PortOneClient portOneClient;
     private final EntityManager em;
 
@@ -61,35 +63,20 @@ public class PaymentOrchestrationService {
 
 //        2. 결제 단건 조회 후 포트원 쪽이랑 Paid 됐는지 교차확인
         PortoneSingleResponseDTO res = portOneClient.getPayment(paymentId);
-
-        if (!paymentOrder.getPaymentOrderStatus().equals(PaymentOrderStatus.Paid) || !res.getStatus().equals("PAID")
+        if (!paymentOrder.getPaymentOrderStatus().equals(PaymentOrderStatus.Payment_Paid) || !res.getStatus().equals("PAID")
         ) {
             throw new BusinessException(ErrorCode.NOT_PAID_ORDER);
         }
 
-//        4. 환불 준비 완료 이벤트 저장
-        PaymentEventMessageDTO PaymentEventMessageDTO = PaymentEventMessageDTO.builder()
-                .paymentId(paymentId)
-                .festivalId(paymentOrder.getFestivalId())
-                .eventType(PaymentOrderStatus.Ready)
-                .amount(paymentOrder.getAmount())
-                .sellerId(paymentOrder.getSellerId())
-                .currency(paymentOrder.getCurrency())
-                .payMethod(paymentOrder.getPayMethod())
-                .build();
-
-        PaymentEventMessageDTO paymentEventMessageDTO = PaymentEventMessageDTO.builder()
-                .PaymentEventMessageDTO(PaymentEventMessageDTO)
-                .userId(userId)
-                .build();
-
+//        3. 환불 준비 완료 이벤트 저장
+        PaymentEventMessageDTO paymentEventMessageDTO = createPaymentEventMessageDTO(paymentOrder);
         paymentEventProducer.send(paymentEventMessageDTO);
 
 //       5. 환불 요청
         PaymentCancelDTO cancelRes = portOneClient.cancelPayment(paymentId);
+        System.out.println(cancelRes);
 
 //        wallet update
-
 //        ledger update
 
 //        paymentCancellation 엔티티 생성 -> kafka로 해야 되나 ?
@@ -99,7 +86,6 @@ public class PaymentOrchestrationService {
 //        cancelRes.get
 
     }
-
 
 
     @Transactional(readOnly = true)
@@ -122,14 +108,16 @@ public class PaymentOrchestrationService {
 
     @Transactional
     public void completeConfirm(String paymentId) {
+        // 여기서 일단 ledgerUpdated, walletUpdated가 false로 찍힘
         PaymentOrder po = paymentOrderRepository.findByPaymentId(paymentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
-
+        log.info("\uD83C\uDF4E po : {}", po.toString());
         PortoneSingleResponseDTO res = portOneClient.getPayment(paymentId);
 
         if (res == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID);
         }
+
         log.info("✅ [PortOne] 응답 값 : {}", res);
 
         if (!"Paid".equalsIgnoreCase(res.getStatus())) {
@@ -143,24 +131,25 @@ public class PaymentOrchestrationService {
             throw new BusinessException(ErrorCode.NOT_EQUAL_CURRENCY_OR_AMOUNT);
         }
 
-        em.refresh(po);
-
-        log.info("");
         if (!po.isLedgerUpdated() || !po.isWalletUpdated()) {
             throw new BusinessException(ErrorCode.NOT_SETTLED_PAYMENT);
         }
+        log.info("\uD83C\uDF4E 결제 확인 요청 이벤트 완료");
+//
     }
 
 
     /**
      * 결제 요청에 대한 처리
      * PaymentOrder 저장이 가능
-     * */
+     *
+     */
     @Transactional
     public void handlePaymentRequested(PaymentEventMessageDTO paymentEventMessageDTO) {
 //        sellerId와 buyerId, 즉 자신에게 양도 혹은 자신의 상품을 구매하는 것은 block
+
         if (isBuyerIdEqualsSellerId(paymentEventMessageDTO)) {
-            paymentEventMessageDTO.setEventType(PaymentOrderStatus.Rejected);
+            paymentEventMessageDTO.setEventType(PaymentOrderStatus.Payment_Rejected);
             savePaymentEvent(paymentEventMessageDTO);
             return;
         }
@@ -171,10 +160,10 @@ public class PaymentOrchestrationService {
                 .orElseGet(() -> paymentOrderService.createIfAbsent(paymentEventMessageDTO));
     }
 
-//    PaymentEvent 저장
+    //    PaymentEvent 저장
     @Transactional
     public void savePaymentEvent(PaymentEventMessageDTO paymentEventMessageDTO) {
-            paymentEventService.savePaymentEvent(paymentEventMessageDTO);
+        paymentEventService.savePaymentEvent(paymentEventMessageDTO);
     }
 
     private static boolean isBuyerIdEqualsSellerId(PaymentEventMessageDTO paymentEventMessageDTO) {
@@ -183,7 +172,7 @@ public class PaymentOrchestrationService {
 
 
     /**
-     * 웹훅 성공/실패 들어왔을 때 상태 반영 + 필요 시 정산 이벤트 발행
+     * 웹훅 성공/실패 들어왔을 때 상태 반영 + 필요시 정산 이벤트 발행
      */
     @Transactional
     public void handleWebhook(PortoneWebhookDTO payload) {
@@ -207,24 +196,25 @@ public class PaymentOrchestrationService {
             public void afterCommit() {
 //                PaymentEvent 추가 발행
 //                동기 처리로 할지 비동기 처리로 할지 타당한 근거를 대야 할 듯 ?
-                PaymentEventMessageDTO dto=createPaymentEventMessageDTO(paymentOrder);
+                PaymentEventMessageDTO dto = createPaymentEventMessageDTO(paymentOrder);
                 paymentEventProducer.send(dto);
 
 //            결제 완료 됐을 때, Legder, Wallet 갱신 이벤트 발행
-                if (PaymentOrderStatus.Paid.equals(paymentOrder.getPaymentOrderStatus())) {
+                if (PaymentOrderStatus.Payment_Paid.equals(paymentOrder.getPaymentOrderStatus())) {
                     settlementProducer.send(buildSettlementCmd(paymentOrder));
                 }
             }
         });
     }
 
-    private PaymentEventMessageDTO createPaymentEventMessageDTO(PaymentOrder paymentOrder){
+    private PaymentEventMessageDTO createPaymentEventMessageDTO(PaymentOrder paymentOrder) {
         return PaymentEventMessageDTO.builder()
                 .paymentId(paymentOrder.getPaymentId())
                 .bookingId(paymentOrder.getBookingId())
                 .festivalId(paymentOrder.getFestivalId())
                 .eventType(paymentOrder.getPaymentOrderStatus())
                 .amount(paymentOrder.getAmount())
+                .buyerId(paymentOrder.getBuyerId())
                 .sellerId(paymentOrder.getSellerId())
                 .currency(paymentOrder.getCurrency())
                 .payMethod(paymentOrder.getPayMethod())
@@ -238,7 +228,8 @@ public class PaymentOrchestrationService {
                 .paymentId(paymentOrder.getPaymentId())
                 .build();
     }
-    private WalletDTO createWalletDTO(PaymentOrder paymentOrder){
+
+    private WalletDTO createWalletDTO(PaymentOrder paymentOrder) {
         return WalletDTO.builder()
                 .sellerId(paymentOrder.getSellerId())
                 .buyerId(paymentOrder.getBuyerId())
@@ -246,7 +237,7 @@ public class PaymentOrchestrationService {
                 .build();
     }
 
-    private LedgerDTO createLedgerDTO(PaymentOrder paymentOrder){
+    private LedgerDTO createLedgerDTO(PaymentOrder paymentOrder) {
         return LedgerDTO.builder()
                 .buyerId(paymentOrder.getBuyerId())
                 .sellerId(paymentOrder.getSellerId())
@@ -258,24 +249,48 @@ public class PaymentOrchestrationService {
                 .build();
     }
 
-
+//    웹훅으로 PAID 요청 받았을 때 호출되는 메서드
     @Transactional
     public void handleSettlement(SettlementCommandDTO dto) {
         final String paymentId = dto.getPaymentId();
-        LedgerDTO ledgerDTO=dto.getLedgerDTO();
-        WalletDTO  walletDTO=dto.getWalletDTO();
+
+        LedgerDTO ledgerDTO = dto.getLedgerDTO();
+        WalletDTO walletDTO = dto.getWalletDTO();
 
         PaymentOrder order = paymentOrderRepository.findByPaymentIdForUpdate(paymentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
 
         if (order.isLedgerUpdated() && order.isWalletUpdated()) return;
 
-        saveLedger(ledgerDTO, order);
-//        둘 다 있을 때는 ㄱㅊ
+        boolean ledgerDone = false;
+        try {
+            ledgerDone = saveLedgerAndUpdateLedgerUpdated(ledgerDTO, order);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
+        boolean walletDone = false;
+        try {
+            walletDone = saveAndUpdateWallet(walletDTO, order);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
-//        PaymentOrder ledger_updated true로 바꿔야 됨
+        if (ledgerDone && walletDone) {
+            order.setLedgerUpdated(true);
+            order.setWalletUpdated(true);
+            paymentOrderRepository.save(order);
 
+            paymentCompleteConfirmProducer.send(paymentId);
+        }
+        log.info("✅ Wallet & Ledger 저장 및 업데이트 완료");
+//        여기서 카프카로 예매 DB에 이벤트 발행 해주면 됨
+//        여기서 결제가 실제로 완료됐는지 판단하는 이벤트 발행 ?
+//        근데 한
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public boolean saveAndUpdateWallet(WalletDTO walletDTO, PaymentOrder order) {
         Wallet buyer = walletRepository.findById(walletDTO.getBuyerId())
                 .orElseGet(() -> new Wallet(walletDTO.getBuyerId()));
         Wallet seller = walletRepository.findById(walletDTO.getSellerId())
@@ -287,28 +302,19 @@ public class PaymentOrchestrationService {
         walletRepository.save(buyer);
         walletRepository.save(seller);
 
-        order.setWalletUpdated(true);
-
-//        여기서 카프카로 결제 완료 요청 보내주면 될 듯 ?
+        return true;
     }
 
-    private void updateLedgerAndWallet(){}
 
-    private void saveLedger(LedgerDTO ledgerDTO, PaymentOrder order) {
-
-
-        try {
-            ledgerRepository.saveAll(List.of(
-                    Ledger.builder().transactionType("DEBIT").userId(ledgerDTO.getBuyerId())
-                            .amount(ledgerDTO.getAmount()).currency(ledgerDTO.getCurrency()).paymentId(ledgerDTO.getPaymentId()).txId(ledgerDTO.getTxId()).build(),
-                    Ledger.builder().transactionType("CREDIT").userId(ledgerDTO.getSellerId())
-                            .amount(ledgerDTO.getAmount()).currency(ledgerDTO.getCurrency()).paymentId(ledgerDTO.getPaymentId()).txId(ledgerDTO.getTxId()).build()
-            ));
-            order.setLedgerUpdated(true);
-        } catch (DataIntegrityViolationException e) {
-            // 이미 존재 → 멱등 처리로 간주
-            order.setLedgerUpdated(true);
-        }
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public boolean saveLedgerAndUpdateLedgerUpdated(LedgerDTO ledgerDTO, PaymentOrder order) {
+        ledgerRepository.saveAll(List.of(
+                Ledger.builder().transactionType("DEBIT").userId(ledgerDTO.getBuyerId())
+                        .amount(ledgerDTO.getAmount()).currency(ledgerDTO.getCurrency()).paymentId(ledgerDTO.getPaymentId()).txId(ledgerDTO.getTxId()).build(),
+                Ledger.builder().transactionType("CREDIT").userId(ledgerDTO.getSellerId())
+                        .amount(ledgerDTO.getAmount()).currency(ledgerDTO.getCurrency()).paymentId(ledgerDTO.getPaymentId()).txId(ledgerDTO.getTxId()).build()
+        ));
+        return true;
     }
 
     private long nz(Long v) {

@@ -39,6 +39,8 @@ public class PaymentCancellation {
     private Long vatAmount;
 
     private String reason;
+
+    @Column(name = "trigger_type")
     private String trigger; // "API" | "WEBHOOK"
     private String receiptUrl;
 

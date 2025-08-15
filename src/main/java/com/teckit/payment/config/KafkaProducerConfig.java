@@ -43,4 +43,9 @@ public class KafkaProducerConfig {
     public KafkaTemplate<String, SettlementCommandDTO> settlementCommandKafkaTemplate() {
         return new KafkaTemplate<>(producerFactory(SettlementCommandDTO.class));
     }
+
+    @Bean
+    public KafkaTemplate<String, String> paymentCompleteConfirmKafkaTemplate() {
+        return new KafkaTemplate<>(producerFactory(String.class));
+    }
 }

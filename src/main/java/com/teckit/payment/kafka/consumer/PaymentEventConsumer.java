@@ -20,6 +20,7 @@ public class PaymentEventConsumer {
     )
     public void consume(PaymentEventMessageDTO paymentEventMessageDTO) {
         // 실제 처리 로직은 여기에 작성 (예: DB 저장)
+        log.info("Receive PaymentEventMessageDTO: {}", paymentEventMessageDTO.getBuyerId());
         paymentOrchestrationService.handlePaymentRequested(paymentEventMessageDTO);
         log.info("✅ Payment Event 요청이 성공적으로 완료되었습니다. {}", paymentEventMessageDTO);
     }

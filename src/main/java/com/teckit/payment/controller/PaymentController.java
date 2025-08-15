@@ -47,15 +47,12 @@ public class PaymentController {
     }
 
     @PostMapping("/request")
-    public ResponseEntity<SuccessResponse<String>> requestPayment(@RequestBody PaymentEventDTO dto,
+    public ResponseEntity<SuccessResponse<String>> requestPayment(@RequestBody PaymentEventMessageDTO dto,
                                                                   @RequestHeader("X-User-Id") String userIdHeader) {
         Long userId = Long.parseLong(userIdHeader); // 또는 Long.valueOf(userIdHeader)
-        PaymentEventMessageDTO paymentEventMessageDTO = PaymentEventMessageDTO.builder()
-                .paymentEventDTO(dto)
-                .userId(userId)
-                .build();
+        dto.setBuyerId(userId);
 
-        paymentEventProducer.send(paymentEventMessageDTO);
+        paymentEventProducer.send(dto);
         return ApiResponseUtil.success();
     }
 
@@ -75,6 +72,8 @@ public class PaymentController {
 
     @PostMapping("/complete/{paymentId}")
     public ResponseEntity<SuccessResponse<String>> completeConfirm(@PathVariable String paymentId) {
+        log.info("👩🏻‍🦰 결제 완료 요청 발생");
+
         paymentOrchestrationService.completeConfirm(paymentId);
         return ApiResponseUtil.success();
     }

@@ -23,18 +23,17 @@ public class PaymentEventService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void savePaymentEvent(PaymentEventMessageDTO paymentEventMessageDTO) {
-        PaymentEventDTO dto = paymentEventMessageDTO.getPaymentEventDTO();
         PaymentEvent e = PaymentEvent.builder()
-                .festivalId(dto.getFestivalId())
-                .paymentId(dto.getPaymentId())
+                .festivalId(paymentEventMessageDTO.getFestivalId())
+                .paymentId(paymentEventMessageDTO.getPaymentId())
+                .bookingId(paymentEventMessageDTO.getBookingId())
 //                buyerId는 access token 이용해서
-                .buyerId(paymentEventMessageDTO.getUserId())
-                .sellerId(dto.getSellerId())
-                .eventType(dto.getEventType())
-                .currency(dto.getCurrency())
-                .amount(dto.getAmount())
-                .payMethod(dto.getPayMethod())
-                .timestamp(LocalDateTime.now())
+                .buyerId(paymentEventMessageDTO.getBuyerId())
+                .sellerId(paymentEventMessageDTO.getSellerId())
+                .eventType(paymentEventMessageDTO.getEventType())
+                .currency(paymentEventMessageDTO.getCurrency())
+                .amount(paymentEventMessageDTO.getAmount())
+                .payMethod(paymentEventMessageDTO.getPayMethod())
                 .build();
 
             paymentEventRepository.save(e);

@@ -30,7 +30,6 @@ public class PaymentEventMessageDTO {
 
 //    양도에서는 피양도자가 buyerId
 //    예매에서는 예약자가 buyerId;
-    @NotNull
     private Long buyerId;
 
 //    양도에서는 양도자가 sellerId
