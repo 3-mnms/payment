@@ -2,7 +2,7 @@ package com.teckit.payment.service;
 
 import com.teckit.payment.config.PortOneClient;
 import com.teckit.payment.dto.request.*;
-import com.teckit.payment.dto.response.PaymentCancelDTO;
+import com.teckit.payment.dto.response.PaymentCancelResponseDTO;
 import com.teckit.payment.dto.response.PaymentOrderDTO;
 import com.teckit.payment.dto.response.PortoneSingleResponseDTO;
 import com.teckit.payment.entity.Ledger;
@@ -21,7 +21,6 @@ import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,8 +57,13 @@ public class PaymentOrchestrationService {
 
     public void paymentCancel(String paymentId, Long userId) {
 //        1. paymentOrder에서 paymentId에 해당하는 entity가 존재하는지 확인
+
         PaymentOrder paymentOrder = paymentOrderRepository.findByPaymentId(paymentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
+
+        if(!paymentOrder.getBuyerId().equals(userId)){
+            throw new BusinessException(ErrorCode.NOT_EQUAL_BUYER_ID_AND_USER_ID);
+        }
 
 //        2. 결제 단건 조회 후 포트원 쪽이랑 Paid 됐는지 교차확인
         PortoneSingleResponseDTO res = portOneClient.getPayment(paymentId);
@@ -73,8 +77,9 @@ public class PaymentOrchestrationService {
         paymentEventProducer.send(paymentEventMessageDTO);
 
 //       5. 환불 요청
-        PaymentCancelDTO cancelRes = portOneClient.cancelPayment(paymentId);
-        System.out.println(cancelRes);
+        PaymentCancelResponseDTO cancelRes = portOneClient.cancelPayment(paymentId);
+
+        log.info("👍 cancelRes : {}",cancelRes);
 
 //        wallet update
 //        ledger update

@@ -32,7 +32,7 @@ public class PaymentController {
                                                                  @RequestHeader("X-User-Id") String userIdHeader){
         Long userId = Long.parseLong(userIdHeader); // 또는 Long.valueOf(userIdHeader)
 
-//        paymentOrchestrationService.paymentCancel(paymentId,userId);
+        paymentOrchestrationService.paymentCancel(paymentId,userId);
         return ApiResponseUtil.success();
     }
 

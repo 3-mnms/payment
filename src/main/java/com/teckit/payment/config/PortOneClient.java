@@ -2,23 +2,17 @@ package com.teckit.payment.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.teckit.payment.dto.response.PaymentCancelDTO;
-import com.teckit.payment.dto.response.PortoneErrorDTO;
+import com.teckit.payment.dto.request.PaymentCancelRequestDTO;
+
+import com.teckit.payment.dto.response.PaymentCancelResponseDTO;
 import com.teckit.payment.dto.response.PortoneSingleResponseDTO;
-import com.teckit.payment.exception.BusinessException;
-import com.teckit.payment.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.io.InputStream;
 
 @Service
 @RequiredArgsConstructor
@@ -48,11 +42,16 @@ public class PortOneClient {
                 .body(PortoneSingleResponseDTO.class);
     }
 
-    public PaymentCancelDTO cancelPayment(String paymentId){
+    public PaymentCancelResponseDTO cancelPayment(String paymentId){
+        PaymentCancelRequestDTO dto= PaymentCancelRequestDTO.builder()
+                .reason("사용자 요청으로 인한 환불")
+                .build();
+
         return portOneClient.post()
                 .uri("/payments/{paymentId}/cancel", paymentId)
+                .body(dto)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, (req, res) -> {})
-                .body(PaymentCancelDTO.class);
+                .body(PaymentCancelResponseDTO.class);
     }
 }
