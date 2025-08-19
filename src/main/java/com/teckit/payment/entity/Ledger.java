@@ -1,30 +1,47 @@
 package com.teckit.payment.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Entity
+@Entity(name="ledger")
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Ledger {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String transaction_type; // 예: DEBIT, CREDIT
+    @Column(name = "transaction_type")
+    private String transactionType; // 예: DEBIT, CREDIT
 
-    private String user_id;// 해당 거래의 대상
+    @Column(name="user_id")
+    private Long userId;// 해당 거래의 대상
 
-    private String amount;
+    @NotNull
+    private Long amount;
 
     private String currency;
 
-    private String payment_order_id;
+    @Column(name = "payment_id")
+    private String paymentId;
 
+    @Column(name = "tx_id")
+    private String txId;
+
+    @Column(name="booking_id")
+    private String bookingId;
+
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
 }
