@@ -6,16 +6,21 @@ import com.teckit.payment.dto.request.PaymentCancelRequestDTO;
 
 import com.teckit.payment.dto.response.PaymentCancelResponseDTO;
 import com.teckit.payment.dto.response.PortoneSingleResponseDTO;
+import com.teckit.payment.exception.BusinessException;
+import com.teckit.payment.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PortOneClient {
 
     private final ObjectMapper objectMapper;
@@ -42,7 +47,7 @@ public class PortOneClient {
                 .body(PortoneSingleResponseDTO.class);
     }
 
-    public PaymentCancelResponseDTO cancelPayment(String paymentId){
+    public ResponseEntity<PaymentCancelResponseDTO> cancelPayment(String paymentId){
         PaymentCancelRequestDTO dto= PaymentCancelRequestDTO.builder()
                 .reason("사용자 요청으로 인한 환불")
                 .build();
@@ -51,7 +56,12 @@ public class PortOneClient {
                 .uri("/payments/{paymentId}/cancel", paymentId)
                 .body(dto)
                 .retrieve()
-                .onStatus(HttpStatusCode::isError, (req, res) -> {})
-                .body(PaymentCancelResponseDTO.class);
+                .onStatus(HttpStatusCode::isError, (req, res) -> {
+                    log.warn("❌ Portone 환불 실패 ");
+                    throw new BusinessException(ErrorCode.FAILED_PAYMENT_CANCEL);
+                })
+                .toEntity(PaymentCancelResponseDTO.class);
     }
+
+
 }

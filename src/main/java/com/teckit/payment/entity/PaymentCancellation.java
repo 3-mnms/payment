@@ -2,6 +2,9 @@ package com.teckit.payment.entity;
 
 import com.teckit.payment.enumeration.CancellationStatus;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
@@ -11,6 +14,9 @@ import java.time.Instant;
                 @UniqueConstraint(name="uk_cancel_ext_id", columnNames = "external_cancel_id"),
                 @UniqueConstraint(name="uk_cancel_pg_id",  columnNames = "pg_cancel_id")
         })
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PaymentCancellation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
