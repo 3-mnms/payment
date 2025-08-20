@@ -1,9 +1,10 @@
 package com.teckit.payment.dto.response;
 
 import lombok.Data;
+import lombok.Getter;
 
+@Getter
 @Data
 public class PaymentCancelResponseDTO {
-    private String type;
-    private String message;
+    private CancellationDTO cancellation;
 }

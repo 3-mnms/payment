@@ -1,5 +1,6 @@
 package com.teckit.payment.entity;
 
+import com.teckit.payment.enumeration.LedgerTransactionStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -18,7 +19,7 @@ public class Ledger {
     private Long id;
 
     @Column(name = "transaction_type")
-    private String transactionType; // 예: DEBIT, CREDIT
+    private LedgerTransactionStatus transactionType; // 예: DEBIT, CREDIT
 
     @Column(name="user_id")
     private Long userId;// 해당 거래의 대상
