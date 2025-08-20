@@ -2,10 +2,7 @@ package com.teckit.payment.service;
 
 import com.teckit.payment.config.PortOneClient;
 import com.teckit.payment.dto.request.*;
-import com.teckit.payment.dto.response.CancellationDTO;
-import com.teckit.payment.dto.response.PaymentCancelResponseDTO;
-import com.teckit.payment.dto.response.PaymentOrderDTO;
-import com.teckit.payment.dto.response.PortoneSingleResponseDTO;
+import com.teckit.payment.dto.response.*;
 import com.teckit.payment.entity.Ledger;
 import com.teckit.payment.entity.PaymentCancellation;
 import com.teckit.payment.entity.PaymentOrder;
@@ -17,7 +14,8 @@ import com.teckit.payment.exception.BusinessException;
 import com.teckit.payment.exception.ErrorCode;
 import com.teckit.payment.kafka.producer.PaymentCompleteConfirmProducer;
 import com.teckit.payment.kafka.producer.PaymentEventProducer;
-import com.teckit.payment.kafka.producer.SettlementProducer;
+import com.teckit.payment.kafka.producer.PaymentSettlementProducer;
+import com.teckit.payment.kafka.producer.PaymentStatusProducer;
 import com.teckit.payment.repository.LedgerRepository;
 import com.teckit.payment.repository.PaymentCancellationRepository;
 import com.teckit.payment.repository.PaymentOrderRepository;
@@ -55,10 +53,11 @@ public class PaymentOrchestrationService {
 
     //    event
     PaymentEventProducer paymentEventProducer;
-    SettlementProducer settlementProducer;
+    PaymentSettlementProducer paymentSettlementProducer;
     PaymentCompleteConfirmProducer paymentCompleteConfirmProducer;
+    PaymentStatusProducer paymentStatusProducer;
 
-//    RestClient
+    //    RestClient
     PortOneClient portOneClient;
     private final EntityManager em;
 
@@ -74,7 +73,7 @@ public class PaymentOrchestrationService {
 
         Long amount = paymentOrder.getAmount();
 
-        if(!buyerId.equals(userId)){
+        if (!buyerId.equals(userId)) {
             throw new BusinessException(ErrorCode.NOT_EQUAL_BUYER_ID_AND_USER_ID);
         }
 //        2. 결제 단건 조회 후 포트원 쪽이랑 Paid 됐는지 교차확인
@@ -90,11 +89,12 @@ public class PaymentOrchestrationService {
 
 //       5. 환불 요청
         ResponseEntity<PaymentCancelResponseDTO> cancelRes = portOneClient.cancelPayment(paymentId);
-        log.info("cancelRes : {}",cancelRes.getBody().toString());
+        log.info("cancelRes : {}", cancelRes.getBody().toString());
 
         boolean isCancelled = cancelRes.getStatusCode().is2xxSuccessful();
 
-        if(isCancelled){
+//        카프카 이벤트로 변경
+        if (isCancelled) {
             CancellationDTO dto = cancelRes.getBody().getCancellation();
 
             // 2. PaymentCancellation 엔티티 저장
@@ -117,15 +117,15 @@ public class PaymentOrchestrationService {
 
             Wallet buyerWallet = walletRepository.findById(buyerId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_WALLET));
-            Wallet sellerWallet=walletRepository.findById(sellerId)
-                    .orElseThrow(()->new BusinessException(ErrorCode.NOT_FOUND_WALLET));
+            Wallet sellerWallet = walletRepository.findById(sellerId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_WALLET));
 
-            buyerWallet.setTotalPaidAmount(buyerWallet.getTotalPaidAmount()-amount);
-            sellerWallet.setTotalPaidAmount(sellerWallet.getTotalReceivedAmount()-amount);
+            buyerWallet.setTotalPaidAmount(buyerWallet.getTotalPaidAmount() - amount);
+            sellerWallet.setTotalPaidAmount(sellerWallet.getTotalReceivedAmount() - amount);
 
             LedgerDTO ledgerDTO = createLedgerDTO(paymentOrder);
 
-            saveLedgerAndUpdateLedgerUpdated(ledgerDTO,true);
+            saveLedgerAndUpdateLedgerUpdated(ledgerDTO, true);
             paymentOrder.setPaymentOrderStatus(PaymentOrderStatus.Payment_Cancelled);
             paymentOrderRepository.save(paymentOrder);
         }
@@ -226,9 +226,21 @@ public class PaymentOrchestrationService {
         final String txId = payload.getTx_id();
         final PaymentOrderStatus status = payload.getStatus();
 
+//        status가 실패 또는 취소일 때 바로 카프카로 전송
+        log.info("status : {}", status);
+
+
 //        paymentOrder 조회
         PaymentOrder paymentOrder = paymentOrderRepository.findByPaymentId(paymentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
+
+        if (status==PaymentOrderStatus.Payment_Failed || status==PaymentOrderStatus.Payment_Cancelled ) {
+            paymentStatusProducer.send(PaymentStatusDTO.builder()
+                    .reservationNumber(paymentOrder.getBookingId())
+                    .success(false)
+                    .build());
+            return;
+        }
 
 //        PortOne webhook이 주는 상태에 따라 상태값 변경 (변경되지 않을 수 있음.)
         paymentOrderService.changeStatus(paymentOrder, status);
@@ -246,7 +258,11 @@ public class PaymentOrchestrationService {
 
 //            결제 완료 됐을 때, Legder, Wallet 갱신 이벤트 발행
                 if (PaymentOrderStatus.Payment_Paid.equals(paymentOrder.getPaymentOrderStatus())) {
-                    settlementProducer.send(buildSettlementCmd(paymentOrder));
+                    paymentStatusProducer.send(PaymentStatusDTO.builder()
+                            .reservationNumber(paymentOrder.getBookingId())
+                            .success(true)
+                            .build());
+                    paymentSettlementProducer.send(buildSettlementCmd(paymentOrder));
                 }
             }
         });
@@ -294,7 +310,7 @@ public class PaymentOrchestrationService {
                 .build();
     }
 
-//    웹훅으로 PAID 요청 받았을 때 호출되는 메서드
+    //    웹훅으로 PAID 요청 받았을 때 호출되는 메서드
     @Transactional
     public void handleSettlement(SettlementCommandDTO dto) {
         final String paymentId = dto.getPaymentId();
@@ -309,7 +325,7 @@ public class PaymentOrchestrationService {
 
         boolean ledgerDone = false;
         try {
-            ledgerDone = saveLedgerAndUpdateLedgerUpdated(ledgerDTO,false);
+            ledgerDone = saveLedgerAndUpdateLedgerUpdated(ledgerDTO, false);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -352,11 +368,11 @@ public class PaymentOrchestrationService {
 
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
-    public boolean saveLedgerAndUpdateLedgerUpdated(LedgerDTO ledgerDTO,boolean isCancelled) {
+    public boolean saveLedgerAndUpdateLedgerUpdated(LedgerDTO ledgerDTO, boolean isCancelled) {
         ledgerRepository.saveAll(List.of(
-                Ledger.builder().transactionType(isCancelled?LedgerTransactionStatus.DEBIT:LedgerTransactionStatus.CANCEL_DEBIT).userId(ledgerDTO.getBuyerId())
+                Ledger.builder().transactionType(isCancelled ? LedgerTransactionStatus.DEBIT : LedgerTransactionStatus.CANCEL_DEBIT).userId(ledgerDTO.getBuyerId())
                         .amount(ledgerDTO.getAmount()).currency(ledgerDTO.getCurrency()).paymentId(ledgerDTO.getPaymentId()).txId(ledgerDTO.getTxId()).build(),
-                Ledger.builder().transactionType(isCancelled?LedgerTransactionStatus.CREDIT:LedgerTransactionStatus.CANCEL_CREDIT).userId(ledgerDTO.getSellerId())
+                Ledger.builder().transactionType(isCancelled ? LedgerTransactionStatus.CREDIT : LedgerTransactionStatus.CANCEL_CREDIT).userId(ledgerDTO.getSellerId())
                         .amount(ledgerDTO.getAmount()).currency(ledgerDTO.getCurrency()).paymentId(ledgerDTO.getPaymentId()).txId(ledgerDTO.getTxId()).build()
         ));
         return true;
