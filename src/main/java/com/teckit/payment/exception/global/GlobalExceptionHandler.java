@@ -1,5 +1,6 @@
 package com.teckit.payment.exception.global;
 
+import com.teckit.payment.controller.PaymentController;
 import com.teckit.payment.exception.BusinessException;
 import com.teckit.payment.exception.ErrorCode;
 import org.springframework.http.HttpStatus;
@@ -7,9 +8,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-@ControllerAdvice
+@RestControllerAdvice(annotations = {RestController.class},basePackageClasses = {PaymentController.class})
 public class GlobalExceptionHandler {
 
     /**

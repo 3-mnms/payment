@@ -11,9 +11,9 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class SettlementProducer {
+public class PaymentSettlementProducer {
 
-    @Qualifier("settlementCommandKafkaTemplate")
+    @Qualifier("paymentSettlementCommandKafkaTemplate")
     private final KafkaTemplate<String, SettlementCommandDTO> kafkaTemplate;
 
     @Value("${app.kafka.topic.settlement-command}")

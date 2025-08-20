@@ -20,7 +20,7 @@ public class PaymentCompleteConfirmProducer {
     private String topic;
 
     public void send(String paymentId) {
-        kafkaTemplate.send("payment-confirm-events", paymentId);
+        kafkaTemplate.send(topic, paymentId,paymentId);
         log.info("Payment complete confirm message sent to topic: {}", paymentId);
     }
 }
