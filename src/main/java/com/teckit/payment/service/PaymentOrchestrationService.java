@@ -131,7 +131,7 @@ public class PaymentOrchestrationService {
                     .reservationNumber(paymentId)
                     .success(true)
                     .build());
-        }else{
+        } else {
             paymentCancelProducer.send(PaymentCancelEventDTO.builder()
                     .method("cancel")
                     .reservationNumber(paymentId)
@@ -245,6 +245,7 @@ public class PaymentOrchestrationService {
 
         if (status == PaymentOrderStatus.Payment_Failed || status == PaymentOrderStatus.Payment_Cancelled) {
             paymentStatusProducer.send(PaymentStatusDTO.builder()
+                    .method("payment")
                     .reservationNumber(paymentOrder.getBookingId())
                     .success(false)
                     .build());
@@ -268,6 +269,7 @@ public class PaymentOrchestrationService {
 //            결제 완료 됐을 때, Legder, Wallet 갱신 이벤트 발행
                 if (PaymentOrderStatus.Payment_Paid.equals(paymentOrder.getPaymentOrderStatus())) {
                     paymentStatusProducer.send(PaymentStatusDTO.builder()
+                            .method("payment")
                             .reservationNumber(paymentOrder.getBookingId())
                             .success(true)
                             .build());
