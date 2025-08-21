@@ -1,13 +1,15 @@
 package com.teckit.payment.dto.response;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-public class PaymentStatusDTO {
+public class PaymentCancelEventDTO {
     private String method;
     private String reservationNumber;
     private boolean success;

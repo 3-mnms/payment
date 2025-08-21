@@ -12,10 +12,7 @@ import com.teckit.payment.enumeration.LedgerTransactionStatus;
 import com.teckit.payment.enumeration.PaymentOrderStatus;
 import com.teckit.payment.exception.BusinessException;
 import com.teckit.payment.exception.ErrorCode;
-import com.teckit.payment.kafka.producer.PaymentCompleteConfirmProducer;
-import com.teckit.payment.kafka.producer.PaymentEventProducer;
-import com.teckit.payment.kafka.producer.PaymentSettlementProducer;
-import com.teckit.payment.kafka.producer.PaymentStatusProducer;
+import com.teckit.payment.kafka.producer.*;
 import com.teckit.payment.repository.LedgerRepository;
 import com.teckit.payment.repository.PaymentCancellationRepository;
 import com.teckit.payment.repository.PaymentOrderRepository;
@@ -56,6 +53,7 @@ public class PaymentOrchestrationService {
     PaymentSettlementProducer paymentSettlementProducer;
     PaymentCompleteConfirmProducer paymentCompleteConfirmProducer;
     PaymentStatusProducer paymentStatusProducer;
+    PaymentCancelProducer paymentCancelProducer;
 
     //    RestClient
     PortOneClient portOneClient;
@@ -93,7 +91,6 @@ public class PaymentOrchestrationService {
 
         boolean isCancelled = cancelRes.getStatusCode().is2xxSuccessful();
 
-//        카프카 이벤트로 변경
         if (isCancelled) {
             CancellationDTO dto = cancelRes.getBody().getCancellation();
 
@@ -128,6 +125,18 @@ public class PaymentOrchestrationService {
             saveLedgerAndUpdateLedgerUpdated(ledgerDTO, true);
             paymentOrder.setPaymentOrderStatus(PaymentOrderStatus.Payment_Cancelled);
             paymentOrderRepository.save(paymentOrder);
+
+            paymentCancelProducer.send(PaymentCancelEventDTO.builder()
+                    .method("cancel")
+                    .reservationNumber(paymentId)
+                    .success(true)
+                    .build());
+        }else{
+            paymentCancelProducer.send(PaymentCancelEventDTO.builder()
+                    .method("cancel")
+                    .reservationNumber(paymentId)
+                    .success(false)
+                    .build());
         }
         log.info("✅ 결제 취소가 완료되었습니다.");
     }
@@ -234,7 +243,7 @@ public class PaymentOrchestrationService {
         PaymentOrder paymentOrder = paymentOrderRepository.findByPaymentId(paymentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
 
-        if (status==PaymentOrderStatus.Payment_Failed || status==PaymentOrderStatus.Payment_Cancelled ) {
+        if (status == PaymentOrderStatus.Payment_Failed || status == PaymentOrderStatus.Payment_Cancelled) {
             paymentStatusProducer.send(PaymentStatusDTO.builder()
                     .reservationNumber(paymentOrder.getBookingId())
                     .success(false)
