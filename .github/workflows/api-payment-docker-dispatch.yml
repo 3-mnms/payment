@@ -50,7 +50,7 @@ jobs:
         with:
           images: ${{ env.IMAGE }}
           tags: |
-            type=raw,value=${{ env.TAG_AMD }}
+            type=raw,value=v0.1
             type=raw,value=${{ env.TAG_ARM }}
             type=sha
             type=raw,value=latest,enable=${{ github.ref_name == 'main' }}
