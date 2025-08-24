@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 public class PaymentEvent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="e_id")
     private Long eId;
 
     @Column(name = "payment_id",nullable = false)

@@ -1,6 +1,7 @@
 package com.teckit.payment.entity;
 
 import com.teckit.payment.enumeration.PaymentOrderStatus;
+import com.teckit.payment.enumeration.PaymentType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -47,6 +48,10 @@ public class PaymentOrder {
 
     @Column(name = "pay_method", nullable = false)
     private String payMethod;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_type")
+    private PaymentType paymentType;
 
     //    추후 enum 으로 변경
     @Column(name = "payment_order_status", nullable = false)

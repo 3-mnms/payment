@@ -57,7 +57,7 @@ public class PaymentOrchestrationService {
 
     //    RestClient
     PortOneClient portOneClient;
-    private final EntityManager em;
+//    private final EntityManager em;
 
     @Transactional
     public void paymentCancel(String paymentId, Long userId) {
