@@ -2,6 +2,7 @@ package com.teckit.payment.config;
 
 
 import com.teckit.payment.dto.request.PaymentEventMessageDTO;
+import com.teckit.payment.dto.request.PaymentRequestDTO;
 import com.teckit.payment.dto.request.SettlementCommandDTO;
 import com.teckit.payment.dto.response.PaymentCancelEventDTO;
 import com.teckit.payment.dto.response.PaymentStatusDTO;
@@ -59,5 +60,10 @@ public class KafkaProducerConfig {
     @Bean
     public KafkaTemplate<String, PaymentCancelEventDTO> paymentCancelKafkaTemplate() {
         return new  KafkaTemplate<>(producerFactory(PaymentCancelEventDTO.class));
+    }
+
+    @Bean
+    public KafkaTemplate<String, PaymentRequestDTO> paymentRequestKafkaTemplate() {
+        return new  KafkaTemplate<>(producerFactory(PaymentRequestDTO.class));
     }
 }

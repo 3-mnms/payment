@@ -8,6 +8,8 @@ import com.teckit.payment.exception.ErrorCode;
 import com.teckit.payment.repository.TekcitPayAccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -22,10 +24,30 @@ public class TekcitPayAccountService {
         return TekcitPayAccountResponseDTO.fromEntity(tekcitPayAccount);
     }
 
+    @Transactional
     public void createTekcitPayAccount(Long id) {
         tekcitPayAccountRepository.save(TekcitPayAccount.builder()
                 .userId(id)
+                .availableBalance(0L)
                 .build());
     }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void increaseAvailableBalance(Long userId, Long chargedAmount) {
+        TekcitPayAccount tekcitPayAccount = tekcitPayAccountRepository.findByIdForUpdate(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_TEKCIT_PAY_ACCOUNT));
+        tekcitPayAccount.setAvailableBalance(Math.addExact(tekcitPayAccount.getAvailableBalance(), chargedAmount));
+        tekcitPayAccountRepository.save(tekcitPayAccount);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void decreaseAvailableBalance(Long userId, Long chargedAmount) {
+        TekcitPayAccount tekcitPayAccount = tekcitPayAccountRepository.findByIdForUpdate(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_TEKCIT_PAY_ACCOUNT));
+
+        tekcitPayAccount.setAvailableBalance(tekcitPayAccount.getAvailableBalance() - chargedAmount);
+        tekcitPayAccountRepository.save(tekcitPayAccount);
+    }
+
 
 }

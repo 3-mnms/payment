@@ -15,6 +15,7 @@ public enum ErrorCode {
     FAILED_PAYMENT_CANCEL("P008","환불이 실패했습니다.",HttpStatus.PAYMENT_REQUIRED),
     NOT_FOUND_WALLET("P009","존재하지 않는 지갑 정보입니다.",HttpStatus.NOT_FOUND),
     NOT_FOUND_TEKCIT_PAY_ACCOUNT("P010","테킷 페이에 가입되지 않은 사용자입니다.",HttpStatus.NOT_FOUND),
+    NOT_ENOUGH_AVAILABLE_TEKCIT_PAY_POINT("P011","충분하지 않은 테킷 페이 포인트입니다.",HttpStatus.NOT_ACCEPTABLE)
 
     ;
     ;

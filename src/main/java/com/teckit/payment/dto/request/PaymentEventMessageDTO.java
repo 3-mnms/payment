@@ -1,6 +1,11 @@
 package com.teckit.payment.dto.request;
 
+import com.teckit.payment.entity.PaymentEvent;
+import com.teckit.payment.entity.PaymentOrder;
+import com.teckit.payment.enumeration.PayMethodType;
 import com.teckit.payment.enumeration.PaymentOrderStatus;
+import com.teckit.payment.enumeration.PaymentType;
+import com.teckit.payment.util.PaymentOrderStatusUtil;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -11,6 +16,7 @@ import lombok.*;
 @NoArgsConstructor
 @Getter
 @Setter
+@Data
 public class PaymentEventMessageDTO {
 //    무작위로 발생된 주문 번호
     @NotBlank
@@ -30,6 +36,7 @@ public class PaymentEventMessageDTO {
 
 //    양도에서는 피양도자가 buyerId
 //    예매에서는 예약자가 buyerId;
+    @NotNull
     private Long buyerId;
 
 //    양도에서는 양도자가 sellerId
@@ -45,5 +52,34 @@ public class PaymentEventMessageDTO {
 
 //    외부 입력
     @NotBlank
-    private String payMethod;
+    private PayMethodType payMethod;
+
+    public static PaymentEventMessageDTO fromPaymentOrder(PaymentOrder paymentOrder){
+
+        return PaymentEventMessageDTO.builder()
+                .paymentId(paymentOrder.getPaymentId())
+                .bookingId(paymentOrder.getBookingId())
+                .festivalId(paymentOrder.getFestivalId())
+                .eventType(paymentOrder.getPaymentOrderStatus())
+                .amount(paymentOrder.getAmount())
+                .buyerId(paymentOrder.getBuyerId())
+                .sellerId(paymentOrder.getSellerId())
+                .currency(paymentOrder.getCurrency())
+                .payMethod(paymentOrder.getPayMethod())
+                .build();
+    }
+
+    public static PaymentEventMessageDTO fromPaymentRequest(PaymentRequestDTO dto){
+        return PaymentEventMessageDTO.builder()
+                .paymentId(dto.getPaymentId())
+                .bookingId(dto.getBookingId())
+                .festivalId(dto.getFestivalId())
+                .eventType(dto.getPaymentRequestType())
+                .buyerId(dto.getBuyerId())
+                .sellerId(dto.getSellerId())
+                .currency(dto.getCurrency())
+                .amount(dto.getAmount())
+                .payMethod(dto.getPayMethod())
+                .build();
+    }
 }

@@ -2,13 +2,15 @@ package com.teckit.payment.entity;
 
 import com.teckit.payment.enumeration.LedgerScope;
 import com.teckit.payment.enumeration.LedgerTransactionStatus;
+import com.teckit.payment.enumeration.PaymentType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Entity(name="ledger")
+@Entity
+@Table(name="ledger")
 @Getter
 @Setter
 @Builder
@@ -44,8 +46,8 @@ public class Ledger {
     private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(name="ledger_scope",nullable = false)
-    private LedgerScope ledgerScope;
+    @Column(name="payment_type",nullable = false)
+    private PaymentType paymentType;
 
     @PrePersist
     public void prePersist() {
