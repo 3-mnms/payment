@@ -227,15 +227,6 @@ public class PaymentOrchestrationService {
         String prefix = PaymentOrderStatusUtil.extractPrefix(paymentOrder.getPaymentOrderStatus());
         PaymentOrderStatus updatedStatus=PaymentOrderStatus.valueOf(prefix+"_"+webhookStatus.toUpperCase(Locale.ROOT));
 
-        if(updatedStatus==PaymentOrderStatus.POINT_PAYMENT_PAID){
-            Long amount = paymentOrder.getAmount();
-            Long availableBalance = tekcitPayAccountService.getTekcitPayAccountById(paymentOrder.getBuyerId()).getAvailableBalance();
-
-            if(amount>availableBalance){
-                throw new BusinessException(ErrorCode.NOT_ENOUGH_AVAILABLE_TEKCIT_PAY_POINT);
-            }
-        }
-
         log.info("updatedStatus : {}",updatedStatus);
 
 //        PortOne webhook이 주는 상태에 따라 상태값 변경 (변경되지 않을 수 있음.)
@@ -257,21 +248,15 @@ public class PaymentOrchestrationService {
                                 .reservationNumber(paymentOrder.getBookingId())
                                 .success(true)
                                 .build());
-                    }
-                    case POINT_PAYMENT_PAID: {
-                        // 포인트 차감(멱등/락 보장) → 성공하면 정산
-                        tekcitPayAccountService.decreaseAvailableBalance(paymentOrder.getBuyerId(), paymentOrder.getAmount());
-                        paymentStatusProducer.send(PaymentStatusDTO.builder()
-                                .method("payment")
-                                .reservationNumber(paymentOrder.getBookingId())
-                                .success(true)
-                                .build());
+                        paymentSettlementProducer.send(SettlementCommandDTO.fromPaymentOrder(paymentOrder));
+                        break;
                     }
                     case POINT_CHARGE_PAID: {
                         tekcitPayAccountService.increaseAvailableBalance(paymentOrder.getBuyerId(), paymentOrder.getAmount());
+                        paymentSettlementProducer.send(SettlementCommandDTO.fromPaymentOrder(paymentOrder));
+                        break;
                     }
                     default:
-                        paymentSettlementProducer.send(SettlementCommandDTO.fromPaymentOrder(paymentOrder));
                         break;
                 }
             }
@@ -309,7 +294,7 @@ public class PaymentOrchestrationService {
             order.setLedgerUpdated(true);
             order.setWalletUpdated(true);
             paymentOrderRepository.save(order);
-            paymentCompleteConfirmProducer.send(paymentId);
+//            paymentCompleteConfirmProducer.send(paymentId);
         }
         log.info("✅ Wallet & Ledger 저장 및 업데이트 완료");
     }

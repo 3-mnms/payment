@@ -22,6 +22,9 @@ public class TekcitPayAccount {
     @Column(name = "updated_at",nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name="password",nullable = false)
+    private Long password;
+
     @PrePersist
     @PreUpdate
     public void prePersist() {
