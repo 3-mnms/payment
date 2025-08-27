@@ -12,6 +12,7 @@ import com.teckit.payment.kafka.producer.PaymentEventProducer;
 import com.teckit.payment.service.PaymentOrchestrationService;
 import com.teckit.payment.service.PaymentOrderService;
 import com.teckit.payment.util.ApiResponseUtil;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -49,7 +50,17 @@ public class PaymentController {
         return ApiResponseUtil.success(paymentOrderList);
     }
 
+
     @PostMapping("/request")
+    @Operation(
+            summary = "결제 요청 API",
+            description = "paymentRequestType = " +
+                    "일반 결제 : GENERAL_PAYMENT_REQUESTED  " +
+                    "테킷 페이 결제 : POINT_PAYMENT_REQUESTED  " +
+                    "포인트 충전 : POINT_CHARGE_REQUESTED" +
+                    "포인트 충전의 경우에는 sellerId,festivalId 안넣어서 줘도 자동으로 들어갑니다."
+
+    )
     public ResponseEntity<SuccessResponse<String>> requestPayment(@RequestBody PaymentRequestDTO dto,
                                                                   @RequestHeader("X-User-Id") String userIdHeader) {
 
