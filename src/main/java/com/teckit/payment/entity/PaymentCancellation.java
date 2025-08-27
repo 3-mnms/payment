@@ -36,6 +36,7 @@ public class PaymentCancellation {
     @Column(nullable = false)
     private CancellationStatus status;
 
+    @Column(nullable = false)
     private Long amount;
 
     @Column(name="tax_free_amount", nullable=false)

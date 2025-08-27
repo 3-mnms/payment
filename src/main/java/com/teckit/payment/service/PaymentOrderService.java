@@ -1,22 +1,33 @@
 package com.teckit.payment.service;
 
 import com.teckit.payment.dto.request.PaymentEventMessageDTO;
+import com.teckit.payment.dto.response.PaymentOrderDTO;
 import com.teckit.payment.entity.PaymentOrder;
 import com.teckit.payment.enumeration.PaymentOrderStatus;
+import com.teckit.payment.enumeration.PaymentType;
+import com.teckit.payment.exception.BusinessException;
+import com.teckit.payment.exception.ErrorCode;
 import com.teckit.payment.repository.PaymentOrderRepository;
-import jakarta.transaction.Transactional;
+import com.teckit.payment.util.PaymentOrderStatusUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentOrderService {
     private final PaymentOrderRepository paymentOrderRepository;
+
+    public PaymentOrder getPaymentOrderByPaymentId(String paymentId) {
+        return paymentOrderRepository.findByPaymentId(paymentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
+    }
 
     @Transactional
     public void changeStatus(PaymentOrder order, PaymentOrderStatus status) {
@@ -29,7 +40,6 @@ public class PaymentOrderService {
     @Transactional
     public void updateTxIdIfAbsent(PaymentOrder order, String txId) {
         if (txId == null || txId.isBlank()) return;
-
         if (order.getTxId() != null && !order.getTxId().isBlank()) return;
 
         order.setTxId(txId);
@@ -37,10 +47,12 @@ public class PaymentOrderService {
 
 
     @Transactional
-    public PaymentOrder createIfAbsent(PaymentEventMessageDTO paymentEventMessageDTO) {
+    public void findOrCreateFromEvent(PaymentEventMessageDTO paymentEventMessageDTO) {
         // 빠른 경로: 이미 있으면 바로 반환
-        return paymentOrderRepository.findByPaymentId(paymentEventMessageDTO.getPaymentId()).orElseGet(() -> {
+        paymentOrderRepository.findByPaymentId(paymentEventMessageDTO.getPaymentId()).orElseGet(() -> {
             try {
+                PaymentType inferredType = PaymentOrderStatusUtil.inferPaymentType(paymentEventMessageDTO.getEventType());
+
                 PaymentOrder po = PaymentOrder.builder()
                         .paymentId(paymentEventMessageDTO.getPaymentId())
                         .bookingId(paymentEventMessageDTO.getBookingId())
@@ -50,7 +62,8 @@ public class PaymentOrderService {
                         .amount(paymentEventMessageDTO.getAmount())
                         .currency(paymentEventMessageDTO.getCurrency())
                         .payMethod(paymentEventMessageDTO.getPayMethod())
-                        .paymentOrderStatus(PaymentOrderStatus.Payment_Requested)
+                        .paymentOrderStatus(paymentEventMessageDTO.getEventType())
+                        .paymentType(inferredType)
                         .ledgerUpdated(false)
                         .walletUpdated(false)
                         .build();                           // lastUpdatedAt은 엔티티가 자동 세팅
@@ -61,6 +74,24 @@ public class PaymentOrderService {
                         .orElseThrow(() -> e); // 정말 없으면 예외 그대로
             }
         });
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaymentOrderDTO> getPaymentOrderByFestivalId(String festivalId, Long buyerId) {
+        return paymentOrderRepository.findByFestivalIdAndBuyerIdAndLedgerUpdatedTrueAndWalletUpdatedTrue(festivalId, buyerId)
+                .stream().map((po) -> {
+                    return PaymentOrderDTO.builder()
+                            .paymentId(po.getPaymentId())
+                            .amount(po.getAmount())
+                            .currency(po.getCurrency())
+                            .payMethod(po.getPayMethod())
+                            .payTime(po.getLastUpdatedAt())
+                            .build();
+                }).toList();
+    }
+
+    public boolean getExistByPaymentId(String paymentId) {
+        return paymentOrderRepository.existsByPaymentId(paymentId);
     }
 
 

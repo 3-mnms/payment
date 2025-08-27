@@ -5,29 +5,27 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.Locale;
 
 public enum PaymentOrderStatus {
-    Payment_Requested, Payment_Paid, Payment_Failed, Payment_Cancelled,Payment_Ready,Payment_Rejected,
-    REFUND_Succeeded;
+    // General
+    GENERAL_PAYMENT_REQUESTED,
+    GENERAL_PAYMENT_READY,
+    GENERAL_PAYMENT_PAID,
+    GENERAL_PAYMENT_FAILED,
+    GENERAL_PAYMENT_CANCELLED,
+    GENERAL_PAYMENT_REJECTED,
 
-    @JsonCreator
-    public static PaymentOrderStatus from(String raw) {
-        if (raw == null) return null;
-        String s = raw.trim().toUpperCase(Locale.ROOT);
+    // Point Charge
+    POINT_CHARGE_REQUESTED,
+    POINT_CHARGE_READY,
+    POINT_CHARGE_PAID,
+    POINT_CHARGE_FAILED,
+    POINT_CHARGE_CANCELLED,
+    POINT_CHARGE_REJECTED,
 
-        switch (s) {
-            case "PAYMENT_REQUESTED": return Payment_Requested;
-            case "PAYMENT_PAID":      return Payment_Paid;
-            case "PAYMENT_FAILED":    return Payment_Failed;
-            case "PAYMENT_CANCELLED": return Payment_Cancelled;
-            case "PAYMENT_READY":     return Payment_Ready;
-            case "PAYMENT_REJECTED": return Payment_Rejected;
-            case "REQUESTED": return Payment_Requested;
-            case "PAID":      return Payment_Paid;
-            case "FAILED":    return Payment_Failed;
-            case "CANCELLED": return Payment_Cancelled;
-            case "READY":     return Payment_Ready;
-            case "REJECTED": return Payment_Rejected;
-
-            default: throw new IllegalArgumentException("Unsupported PaymentOrderStatus: " + raw);
-        }
-    }
+    // Point Payment
+    POINT_PAYMENT_REQUESTED,
+    POINT_PAYMENT_READY,
+    POINT_PAYMENT_PAID,
+    POINT_PAYMENT_FAILED,
+    POINT_PAYMENT_CANCELLED,
+    POINT_PAYMENT_REJECTED;
 }

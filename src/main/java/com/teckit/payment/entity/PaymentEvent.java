@@ -1,5 +1,7 @@
 package com.teckit.payment.entity;
 
+import com.teckit.payment.dto.request.PaymentEventMessageDTO;
+import com.teckit.payment.enumeration.PayMethodType;
 import com.teckit.payment.enumeration.PaymentOrderStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -18,6 +20,7 @@ import java.time.LocalDateTime;
 public class PaymentEvent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="e_id")
     private Long eId;
 
     @Column(name = "payment_id",nullable = false)
@@ -39,8 +42,9 @@ public class PaymentEvent {
     @Column(nullable = false)
     private Long amount;
 
+    @Enumerated(EnumType.STRING)
     @Column(name="pay_method" ,nullable = false)
-    private String payMethod;
+    private PayMethodType payMethod;
 
     @Column(nullable = false)
     private String currency;
@@ -55,5 +59,21 @@ public class PaymentEvent {
     @PrePersist
     public void prePersist() {
         this.timestamp = LocalDateTime.now();
+    }
+
+    public static PaymentEvent fromPaymentEventMessageDTO(PaymentEventMessageDTO dto) {
+        return PaymentEvent.builder()
+                .festivalId(dto.getFestivalId())
+                .paymentId(dto.getPaymentId())
+                .bookingId(dto.getBookingId())
+//                buyerId는 access token 이용해서
+                .buyerId(dto.getBuyerId())
+                .sellerId(dto.getSellerId())
+                .eventType(dto.getEventType())
+                .currency(dto.getCurrency())
+                .amount(dto.getAmount())
+                .payMethod(dto.getPayMethod())
+                .build();
+
     }
 }

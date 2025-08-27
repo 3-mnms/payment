@@ -1,6 +1,7 @@
 package com.teckit.payment.controller;
 
 import com.teckit.payment.dto.request.PaymentEventMessageDTO;
+import com.teckit.payment.dto.request.PaymentRequestDTO;
 import com.teckit.payment.dto.request.PortoneWebhookDTO;
 //import com.teckit.payment.kafka.producer.PaymentEventProducer;
 import com.teckit.payment.dto.response.PaymentOrderDTO;
@@ -9,6 +10,7 @@ import com.teckit.payment.exception.ErrorCode;
 import com.teckit.payment.exception.global.SuccessResponse;
 import com.teckit.payment.kafka.producer.PaymentEventProducer;
 import com.teckit.payment.service.PaymentOrchestrationService;
+import com.teckit.payment.service.PaymentOrderService;
 import com.teckit.payment.util.ApiResponseUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,7 @@ public class PaymentController {
 //    이것도 나중에 분리
     private final PaymentEventProducer paymentEventProducer;
     private final PaymentOrchestrationService paymentOrchestrationService;
+    private final PaymentOrderService paymentOrderService;
 
     @PostMapping("/refund/{paymentId}")
     public ResponseEntity<SuccessResponse<String>> paymentCancel(@PathVariable String paymentId,
@@ -42,17 +45,19 @@ public class PaymentController {
                                                                                   @RequestHeader("X-User-Id") String userIdHeader
     ) {
         Long userId = Long.parseLong(userIdHeader); // 또는 Long.valueOf(userIdHeader)
-        List<PaymentOrderDTO> paymentOrderList = paymentOrchestrationService.getPaymentOrderByFestivalId(festivalId,userId);
+        List<PaymentOrderDTO> paymentOrderList = paymentOrderService.getPaymentOrderByFestivalId(festivalId,userId);
         return ApiResponseUtil.success(paymentOrderList);
     }
 
     @PostMapping("/request")
-    public ResponseEntity<SuccessResponse<String>> requestPayment(@RequestBody PaymentEventMessageDTO dto,
+    public ResponseEntity<SuccessResponse<String>> requestPayment(@RequestBody PaymentRequestDTO dto,
                                                                   @RequestHeader("X-User-Id") String userIdHeader) {
+
         Long userId = Long.parseLong(userIdHeader); // 또는 Long.valueOf(userIdHeader)
         dto.setBuyerId(userId);
+        log.info(dto.toString());
 
-        paymentEventProducer.send(dto);
+        paymentOrchestrationService.handlePaymentRequested(dto);
         return ApiResponseUtil.success();
     }
 
@@ -62,7 +67,7 @@ public class PaymentController {
                                                                   @RequestHeader("webhook-signature") String webhookSignature,
                                                                   @RequestHeader("webhook-timestamp") String webhookTimestamp
     ) {
-        if (!paymentOrchestrationService.getExistByPaymentId(payload.getPayment_id())) {
+        if (!paymentOrderService.getExistByPaymentId(payload.getPayment_id())) {
             throw new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID);
         }
 
@@ -77,6 +82,8 @@ public class PaymentController {
         paymentOrchestrationService.completeConfirm(paymentId);
         return ApiResponseUtil.success();
     }
+
+
 }
 
 
