@@ -24,7 +24,6 @@ public class PaymentRequestDTO {
     private String bookingId;
 
     //공연 정보
-    @NotBlank
     private String festivalId;
 
     //    결제 상태 : 요청, 준비, 완료, 취소, 거부(신용 불량 등), 실패 (잔액 없음 등)

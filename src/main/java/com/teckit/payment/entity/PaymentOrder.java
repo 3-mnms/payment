@@ -31,7 +31,7 @@ public class PaymentOrder {
     private String txId;
 
 
-    @Column(name = "festival_id",nullable=false)
+    @Column(name = "festival_id")
     private String festivalId;
 
     //    얘네를 어떻게 보내줄 것인지
