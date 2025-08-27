@@ -3,20 +3,14 @@ package com.teckit.payment.service;
 import com.teckit.payment.config.PortOneClient;
 import com.teckit.payment.dto.request.*;
 import com.teckit.payment.dto.response.*;
-import com.teckit.payment.entity.Ledger;
-import com.teckit.payment.entity.PaymentCancellation;
-import com.teckit.payment.entity.PaymentOrder;
-import com.teckit.payment.entity.Wallet;
+import com.teckit.payment.entity.*;
 import com.teckit.payment.enumeration.CancellationStatus;
 import com.teckit.payment.enumeration.LedgerTransactionStatus;
 import com.teckit.payment.enumeration.PaymentOrderStatus;
 import com.teckit.payment.exception.BusinessException;
 import com.teckit.payment.exception.ErrorCode;
 import com.teckit.payment.kafka.producer.*;
-import com.teckit.payment.repository.LedgerRepository;
-import com.teckit.payment.repository.PaymentCancellationRepository;
-import com.teckit.payment.repository.PaymentOrderRepository;
-import com.teckit.payment.repository.WalletRepository;
+import com.teckit.payment.repository.*;
 import com.teckit.payment.util.PaymentOrderStatusUtil;
 import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;
@@ -29,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -42,12 +38,11 @@ import java.util.Objects;
 public class PaymentOrchestrationService {
     //    repository
     private final PaymentOrderRepository paymentOrderRepository;
-    private final LedgerRepository ledgerRepository;
     private final WalletRepository walletRepository;
     private final PaymentCancellationRepository paymentCancellationRepository;
+    private final TekcitPayAccountRepository  tekcitPayAccountRepository;
     //    service
     private final PaymentOrderService paymentOrderService; // 상태 변경 로직 분리 시 사용
-    private final PaymentEventService paymentEventService;
     private final WalletService walletService;
     private final LedgerService ledgerService;
     private final TekcitPayAccountService tekcitPayAccountService;
@@ -63,89 +58,138 @@ public class PaymentOrchestrationService {
 
     //    RestClient
     PortOneClient portOneClient;
-//    private final EntityManager em;
 
-//    @Transactional
-//    public void paymentCancel(String paymentId, Long userId) {
-////        1. paymentOrder에서 paymentId에 해당하는 entity가 존재하는지 확인
-//
-//        PaymentOrder paymentOrder = paymentOrderRepository.findByPaymentId(paymentId)
-//                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
-//
-//        Long buyerId = paymentOrder.getBuyerId();
-//        Long sellerId = paymentOrder.getSellerId();
-//
-//        Long amount = paymentOrder.getAmount();
-//
-//        if (!buyerId.equals(userId)) {
-//            throw new BusinessException(ErrorCode.NOT_EQUAL_BUYER_ID_AND_USER_ID);
-//        }
-////        2. 결제 단건 조회 후 포트원 쪽이랑 Paid 됐는지 교차확인
-//        PortoneSingleResponseDTO res = portOneClient.getPayment(paymentId);
-//        if (!paymentOrder.getPaymentOrderStatus().equals(PaymentOrderStatus.Payment_Paid) || !res.getStatus().equals("PAID")
-//        ) {
-//            throw new BusinessException(ErrorCode.NOT_PAID_ORDER);
-//        }
-//
-////        3. 환불 준비 완료 이벤트 저장
-//        PaymentEventMessageDTO paymentEventMessageDTO = PaymentEventMessageDTO.fromPaymentOrder(paymentOrder);
-//        paymentEventProducer.send(paymentEventMessageDTO);
-//
-////       5. 환불 요청
-//        ResponseEntity<PaymentCancelResponseDTO> cancelRes = portOneClient.cancelPayment(paymentId);
-//        log.info("cancelRes : {}", cancelRes.getBody().toString());
-//
-//        boolean isCancelled = cancelRes.getStatusCode().is2xxSuccessful();
-//
-//        if (isCancelled) {
-//            CancellationDTO dto = cancelRes.getBody().getCancellation();
-//
-//            // 2. PaymentCancellation 엔티티 저장
-//            PaymentCancellation cancellation = PaymentCancellation.builder()
-//                    .order(paymentOrder)
-//                    .externalCancelId(dto.getId())
-//                    .pgCancellationId(dto.getPgCancellationId())
-//                    .status(CancellationStatus.SUCCEEDED)
-//                    .amount(dto.getTotalAmount())
-//                    .taxFreeAmount(dto.getTaxFreeAmount())
-//                    .vatAmount(dto.getVatAmount())
-//                    .reason(dto.getReason())
-//                    .trigger(dto.getTrigger())
-//                    .receiptUrl(dto.getReceiptUrl())
-//                    .requestedAt(dto.getRequestedAt().toInstant())
-//                    .cancelledAt(dto.getCancelledAt().toInstant())
-//                    .build();
-//
-//            paymentCancellationRepository.save(cancellation);
-//
-//            Wallet buyerWallet = walletRepository.findById(buyerId)
-//                    .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_WALLET));
-//            Wallet sellerWallet = walletRepository.findById(sellerId)
-//                    .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_WALLET));
-//
-//            buyerWallet.setTotalPaidAmount(buyerWallet.getTotalPaidAmount() - amount);
-//            sellerWallet.setTotalPaidAmount(sellerWallet.getTotalReceivedAmount() - amount);
-//
-//            LedgerDTO ledgerDTO = LedgerDTO.fromEntity(paymentOrder);
-//
-//            ledgerService.saveLedgerAndUpdateLedgerUpdated(ledgerDTO, true);
-//            paymentOrder.setPaymentOrderStatus(PaymentOrderStatus.Payment_Cancelled);
-//            paymentOrderRepository.save(paymentOrder);
-//
-//            paymentCancelProducer.send(PaymentCancelEventDTO.builder()
-//                    .method("cancel")
-//                    .reservationNumber(paymentId)
-//                    .success(true)
-//                    .build());
-//        } else {
-//            paymentCancelProducer.send(PaymentCancelEventDTO.builder()
-//                    .method("cancel")
-//                    .reservationNumber(paymentId)
-//                    .success(false)
-//                    .build());
-//        }
-//        log.info("✅ 결제 취소가 완료되었습니다.");
-//    }
+    @Transactional
+    public void paymentCancel(String paymentId, Long userId) {
+        // 1. 결제 주문 조회 및 기본 검증
+        PaymentOrder paymentOrder = findAndValidatePaymentOrder(paymentId, userId);
+
+        String prefix = PaymentOrderStatusUtil.extractPrefix(paymentOrder.getPaymentOrderStatus());
+
+        // 2. 결제 방식별 취소 처리
+        PaymentCancellation cancellation = switch (prefix) {
+            case "GENERAL_PAYMENT" -> handleGeneralPaymentCancel(paymentOrder);
+            case "POINT_PAYMENT" -> handlePointPaymentCancel(paymentOrder, userId);
+            default -> throw new BusinessException(ErrorCode.INVALID_PAYMENT_STATUS);
+        };
+
+        paymentCancellationRepository.save(cancellation);
+
+        // 3. 상태 변경 및 후처리
+        handlePostCancelProcess(paymentOrder, cancellation);
+    }
+
+    private PaymentOrder findAndValidatePaymentOrder(String paymentId, Long userId) {
+        PaymentOrder paymentOrder = paymentOrderRepository.findByPaymentId(paymentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
+
+        if (!paymentOrder.getBuyerId().equals(userId)) {
+            throw new BusinessException(ErrorCode.NOT_EQUAL_BUYER_ID_AND_USER_ID);
+        }
+
+        String suffix = PaymentOrderStatusUtil.extractSuffix(paymentOrder.getPaymentOrderStatus());
+        if (!suffix.equals("PAID"))
+            throw new BusinessException(ErrorCode.NOT_PAID_ORDER);
+
+        return paymentOrder;
+    }
+
+    private PaymentCancellation handleGeneralPaymentCancel(PaymentOrder paymentOrder) {
+        // 1. 결제 상태 검증
+        PortoneSingleResponseDTO response = portOneClient.getPayment(paymentOrder.getPaymentId());
+        if (!"PAID".equals(response.getStatus())) {
+            throw new BusinessException(ErrorCode.NOT_PAID_ORDER);
+        }
+
+        // 2. 환불 요청
+        ResponseEntity<PaymentCancelResponseDTO> cancelResponse = portOneClient.cancelPayment(paymentOrder.getPaymentId());
+        if (!cancelResponse.getStatusCode().is2xxSuccessful()) {
+            throw new BusinessException(ErrorCode.FAILED_PAYMENT_CANCEL);
+        }
+
+        assert cancelResponse.getBody() != null;
+        CancellationDTO dto = cancelResponse.getBody().getCancellation();
+
+        return PaymentCancellation.builder()
+                .order(paymentOrder)
+                .externalCancelId(dto.getId())
+                .pgCancellationId(dto.getPgCancellationId())
+                .status(CancellationStatus.SUCCEEDED)
+                .amount(dto.getTotalAmount())
+                .taxFreeAmount(dto.getTaxFreeAmount())
+                .vatAmount(dto.getVatAmount())
+                .reason(dto.getReason())
+                .trigger(dto.getTrigger())
+                .receiptUrl(dto.getReceiptUrl())
+                .requestedAt(dto.getRequestedAt().toInstant())
+                .cancelledAt(dto.getCancelledAt().toInstant())
+                .build();
+    }
+
+    private PaymentCancellation handlePointPaymentCancel(PaymentOrder paymentOrder, Long userId) {
+        TekcitPayAccount tekcitAccount = tekcitPayAccountRepository.findByIdForUpdate(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_TEKCIT_PAY_ACCOUNT));
+
+        tekcitAccount.setAvailableBalance(
+                Math.addExact(tekcitAccount.getAvailableBalance(), paymentOrder.getAmount())
+        );
+
+        return PaymentCancellation.builder()
+                .order(paymentOrder)
+                .status(CancellationStatus.SUCCEEDED)
+                .amount(paymentOrder.getAmount())
+                .requestedAt(Instant.now())
+                .cancelledAt(Instant.now())
+                .build();
+    }
+
+    private void handlePostCancelProcess(PaymentOrder paymentOrder, PaymentCancellation cancellation) {
+        PaymentOrderStatus updatedStatus=PaymentOrderStatusUtil.withPhase(paymentOrder.getPaymentOrderStatus(),"CANCELLED");
+        // 1. 결제 상태 변경
+        paymentOrder.setPaymentOrderStatus(updatedStatus);
+        paymentOrderRepository.save(paymentOrder);
+
+        // 2. 이벤트 발행
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                // 환불 준비 이벤트 발행
+                paymentEventProducer.send(PaymentEventMessageDTO.fromPaymentOrder(paymentOrder));
+
+                // 결제 취소 이벤트 발행
+                paymentCancelProducer.send(
+                        PaymentCancelEventDTO.builder()
+                                .method("cancel")
+                                .reservationNumber(paymentOrder.getBookingId())
+                                .success(true)
+                                .build()
+                );
+
+                // Ledger 기록 및 Wallet 업데이트
+                updateLedgerAndWallet(paymentOrder);
+            }
+        });
+
+        log.info("✅ 결제 취소 완료 - paymentId: {}", paymentOrder.getPaymentId());
+    }
+
+    private void updateLedgerAndWallet(PaymentOrder paymentOrder) {
+        Long buyerId = paymentOrder.getBuyerId();
+        Long sellerId = paymentOrder.getSellerId();
+        Long amount = paymentOrder.getAmount();
+
+        Wallet buyerWallet = walletRepository.findById(buyerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_WALLET));
+        Wallet sellerWallet = walletRepository.findById(sellerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_WALLET));
+
+        buyerWallet.setTotalPaidAmount(buyerWallet.getTotalPaidAmount() - amount);
+        sellerWallet.setTotalReceivedAmount(sellerWallet.getTotalReceivedAmount() - amount);
+
+        LedgerDTO ledgerDTO = LedgerDTO.fromEntity(paymentOrder);
+        ledgerService.saveLedgerAndUpdateLedgerUpdated(ledgerDTO, true);
+    }
+
 
     @Transactional
     public void completeConfirm(String paymentId) {

@@ -30,14 +30,14 @@ public class PaymentController {
     private final PaymentOrchestrationService paymentOrchestrationService;
     private final PaymentOrderService paymentOrderService;
 
-//    @PostMapping("/refund/{paymentId}")
-//    public ResponseEntity<SuccessResponse<String>> paymentCancel(@PathVariable String paymentId,
-//                                                                 @RequestHeader("X-User-Id") String userIdHeader){
-//        Long userId = Long.parseLong(userIdHeader); // 또는 Long.valueOf(userIdHeader)
-//
-//        paymentOrchestrationService.paymentCancel(paymentId,userId);
-//        return ApiResponseUtil.success();
-//    }
+    @PostMapping("/refund/{paymentId}")
+    public ResponseEntity<SuccessResponse<String>> paymentCancel(@PathVariable String paymentId,
+                                                                 @RequestHeader("X-User-Id") String userIdHeader){
+        Long userId = Long.parseLong(userIdHeader); // 또는 Long.valueOf(userIdHeader)
+
+        paymentOrchestrationService.paymentCancel(paymentId,userId);
+        return ApiResponseUtil.success();
+    }
 
     @GetMapping("/{festivalId}")
     public ResponseEntity<SuccessResponse<List<PaymentOrderDTO>>> getPaymentOrder(@PathVariable String festivalId,

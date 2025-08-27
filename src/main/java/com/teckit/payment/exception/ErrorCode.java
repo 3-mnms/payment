@@ -18,7 +18,8 @@ public enum ErrorCode {
     NOT_ENOUGH_AVAILABLE_TEKCIT_PAY_POINT("P011","충분하지 않은 테킷 페이 포인트입니다.",HttpStatus.NOT_ACCEPTABLE),
     INVALID_PAYMENT_STATUS("P013","결제 정보가 일치하지 않습니다.",HttpStatus.CONFLICT),
     INVALID_AMOUNT("P014","유효하지 않은 금액입니다.",HttpStatus.NOT_ACCEPTABLE),
-    INVALID_PASSWORD("P015","일치하지 않는 비밀번호입니다.",HttpStatus.NOT_ACCEPTABLE)
+    INVALID_PASSWORD("P015","일치하지 않는 비밀번호입니다.",HttpStatus.NOT_ACCEPTABLE),
+    IVALID_PAYMENT_TYPE("P016","유효하지 않은 결제 상태입니다.",HttpStatus.NOT_ACCEPTABLE)
 
     ;
     ;
