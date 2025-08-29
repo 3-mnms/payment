@@ -15,11 +15,15 @@ import com.teckit.payment.kafka.producer.PaymentStatusProducer;
 import com.teckit.payment.repository.TekcitPayAccountRepository;
 import com.teckit.payment.util.PaymentOrderStatusUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import java.awt.print.Pageable;
 
 
 @Service
@@ -111,4 +115,13 @@ public class TekcitPayAccountService {
         tekcitPayAccountRepository.save(tekcitPayAccount);
     }
 
+    public Page<PaymentOrder> getTekcitPayHistory(Long userId,int page,int size){
+        boolean isTekcitPayRegistered = tekcitPayAccountRepository.existsById(userId);
+
+        if(!isTekcitPayRegistered) throw new BusinessException(ErrorCode.NOT_FOUND_TEKCIT_PAY_ACCOUNT);
+
+        return paymentOrderService.getTekcitPayHistory(userId, page, size);
+    }
+
 }
+
