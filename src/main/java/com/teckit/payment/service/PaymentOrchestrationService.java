@@ -52,7 +52,7 @@ public class PaymentOrchestrationService {
     //    event
     private final PaymentEventProducer paymentEventProducer;
     private final PaymentSettlementProducer paymentSettlementProducer;
-    private final PaymentCompleteConfirmProducer paymentCompleteConfirmProducer;
+//    private final PaymentCompleteConfirmProducer paymentCompleteConfirmProducer;
     private final PaymentStatusProducer paymentStatusProducer;
     private final PaymentCancelProducer paymentCancelProducer;
     private final PaymentRequestProducer paymentRequestProducer;
@@ -282,12 +282,14 @@ public class PaymentOrchestrationService {
 //        Payment Event 생성
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override public void afterCommit() {
-                paymentEventProducer.send(PaymentEventMessageDTO.fromPaymentOrder(paymentOrder));
                 if (!updatedStatus.name().endsWith("PAID")) return;
 
-                switch (updatedStatus) {
-                    case GENERAL_PAYMENT_PAID: {
+                paymentEventProducer.send(PaymentEventMessageDTO.fromPaymentOrder(paymentOrder));
+                switch (updatedStatus.name()) {
+                    case "GENERAL_PAYMENT_PAID": {
                         // 정산만
+                        log.info("🥸 POINT_CHARGE_PAID 됐음. : {}", paymentOrder.getPaymentId());
+
                         paymentStatusProducer.send(PaymentStatusDTO.builder()
                                 .method("payment")
                                 .reservationNumber(paymentOrder.getBookingId())
@@ -296,7 +298,8 @@ public class PaymentOrchestrationService {
                         paymentSettlementProducer.send(SettlementCommandDTO.fromPaymentOrder(paymentOrder));
                         break;
                     }
-                    case POINT_CHARGE_PAID: {
+                    case "POINT_CHARGE_PAID": {
+                        log.info("🥸 POINT_CHARGE_PAID 됐음. : {}", paymentOrder.getPaymentId());
                         tekcitPayAccountService.increaseAvailableBalance(paymentOrder.getBuyerId(), paymentOrder.getAmount());
                         paymentSettlementProducer.send(SettlementCommandDTO.fromPaymentOrder(paymentOrder));
                         break;

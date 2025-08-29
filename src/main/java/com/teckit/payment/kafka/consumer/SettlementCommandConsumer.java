@@ -18,7 +18,8 @@ public class SettlementCommandConsumer {
             groupId="settlement-consumer"
     )
     public void consume(SettlementCommandDTO dto){
+        log.info("😡Settlement 이벤트 발생");
+
         paymentOrchestrationService.handleSettlement(dto);
-        log.info("Consumer settlement command has been completed");
     }
 }

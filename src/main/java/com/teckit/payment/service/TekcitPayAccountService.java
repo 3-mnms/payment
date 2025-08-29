@@ -43,9 +43,10 @@ public class TekcitPayAccountService {
     }
 
     @Transactional
-    public void createTekcitPayAccount(Long id,Long password) {
+    public void createTekcitPayAccount(Long id, String password) {
         tekcitPayAccountRepository.save(TekcitPayAccount.builder()
                 .userId(id)
+                .password(password)
                 .availableBalance(0L)
                 .build());
     }
@@ -60,14 +61,14 @@ public class TekcitPayAccountService {
 
     @Transactional
     public void payByTekcitPay(Long userId, PayByTekcitPayDTO dto) {
-        if(dto.getAmount()<=0)
+        if (dto.getAmount() <= 0)
             throw new BusinessException(ErrorCode.INVALID_AMOUNT);
 
 
         TekcitPayAccount tekcitPayAccount = tekcitPayAccountRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_TEKCIT_PAY_ACCOUNT));
 
-        if(!tekcitPayAccount.getPassword().equals(dto.getPassword())) {
+        if (!tekcitPayAccount.getPassword().equals(dto.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_PASSWORD);
         }
 
@@ -85,10 +86,10 @@ public class TekcitPayAccountService {
 
         String prefix = PaymentOrderStatusUtil.extractPrefix(paymentOrder.getPaymentOrderStatus());
 
-        if(!prefix.equals("POINT_PAYMENT"))
+        if (!prefix.equals("POINT_PAYMENT"))
             throw new BusinessException(ErrorCode.INVALID_PAYMENT_STATUS);
 
-        if(!paymentOrder.getAmount().equals(dto.getAmount()))
+        if (!paymentOrder.getAmount().equals(dto.getAmount()))
             throw new BusinessException(ErrorCode.INVALID_PAYMENT_STATUS);
 
         decreaseAvailableBalance(paymentOrder.getBuyerId(), paymentOrder.getAmount());
@@ -97,7 +98,8 @@ public class TekcitPayAccountService {
 
         // 5) 커밋 후 사이드이펙트 발행
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override public void afterCommit() {
+            @Override
+            public void afterCommit() {
                 paymentStatusProducer.send(PaymentStatusDTO.builder()
                         .method("payment")
                         .reservationNumber(paymentOrder.getBookingId())
@@ -107,7 +109,8 @@ public class TekcitPayAccountService {
             }
         });
     }
-    public  void decreaseAvailableBalance(Long userId, Long chargedAmount) {
+
+    public void decreaseAvailableBalance(Long userId, Long chargedAmount) {
         TekcitPayAccount tekcitPayAccount = tekcitPayAccountRepository.findByIdForUpdate(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_TEKCIT_PAY_ACCOUNT));
 
@@ -115,10 +118,10 @@ public class TekcitPayAccountService {
         tekcitPayAccountRepository.save(tekcitPayAccount);
     }
 
-    public Page<PaymentOrder> getTekcitPayHistory(Long userId,int page,int size){
+    public Page<PaymentOrder> getTekcitPayHistory(Long userId, int page, int size) {
         boolean isTekcitPayRegistered = tekcitPayAccountRepository.existsById(userId);
 
-        if(!isTekcitPayRegistered) throw new BusinessException(ErrorCode.NOT_FOUND_TEKCIT_PAY_ACCOUNT);
+        if (!isTekcitPayRegistered) throw new BusinessException(ErrorCode.NOT_FOUND_TEKCIT_PAY_ACCOUNT);
 
         return paymentOrderService.getTekcitPayHistory(userId, page, size);
     }
