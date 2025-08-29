@@ -1,12 +1,14 @@
 package com.teckit.payment.controller;
 
 import com.teckit.payment.dto.request.PayByTekcitPayDTO;
+import com.teckit.payment.dto.response.PaymentOrderDTO;
 import com.teckit.payment.dto.response.TekcitPayAccountResponseDTO;
 import com.teckit.payment.exception.global.SuccessResponse;
 import com.teckit.payment.service.TekcitPayAccountService;
 import com.teckit.payment.util.ApiResponseUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,10 +22,9 @@ public class TekcitPayAccountController {
     @PostMapping("/create-account")
     public ResponseEntity<SuccessResponse<Void>> createTekcitPayAccount(
             @RequestBody Long password,
-            @RequestHeader("X-User-Id") String userIdHeader)
-    {
+            @RequestHeader("X-User-Id") String userIdHeader) {
         Long userId = Long.parseLong(userIdHeader);
-        tekcitPayAccountService.createTekcitPayAccount(userId,password);
+        tekcitPayAccountService.createTekcitPayAccount(userId, password);
         return ApiResponseUtil.success();
     }
 
@@ -39,7 +40,18 @@ public class TekcitPayAccountController {
     public ResponseEntity<SuccessResponse<Void>> payByTekcitPayAccount(
             @Valid @RequestBody PayByTekcitPayDTO dto, @RequestHeader("X-User-Id") String userIdHeader) {
         Long userId = Long.parseLong(userIdHeader);
-        tekcitPayAccountService.payByTekcitPay(userId,dto);
+        tekcitPayAccountService.payByTekcitPay(userId, dto);
         return ApiResponseUtil.success();
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<SuccessResponse<Page<PaymentOrderDTO>>> getTekcitPayHistory(@RequestHeader("X-User-Id") String userIdHeader,
+                                                                     @RequestParam(defaultValue = "0") int page,   // 기본값: 0
+                                                                     @RequestParam(defaultValue = "10") int size) {
+        Long userId = Long.parseLong(userIdHeader);
+
+        Page<PaymentOrderDTO> histories = tekcitPayAccountService.getTekcitPayHistory(userId, page, size).map(PaymentOrderDTO::fromPaymentOrder);
+
+        return ApiResponseUtil.success(histories);
     }
 }

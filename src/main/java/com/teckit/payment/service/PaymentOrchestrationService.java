@@ -15,6 +15,7 @@ import com.teckit.payment.util.PaymentOrderStatusUtil;
 import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,7 @@ import java.util.Objects;
 //buyer Id랑 판매자 아이디만 받아오면 될 ㄷ스
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class PaymentOrchestrationService {
     //    repository
@@ -49,15 +50,15 @@ public class PaymentOrchestrationService {
 
 
     //    event
-    PaymentEventProducer paymentEventProducer;
-    PaymentSettlementProducer paymentSettlementProducer;
-    PaymentCompleteConfirmProducer paymentCompleteConfirmProducer;
-    PaymentStatusProducer paymentStatusProducer;
-    PaymentCancelProducer paymentCancelProducer;
-    PaymentRequestProducer paymentRequestProducer;
+    private final PaymentEventProducer paymentEventProducer;
+    private final PaymentSettlementProducer paymentSettlementProducer;
+    private final PaymentCompleteConfirmProducer paymentCompleteConfirmProducer;
+    private final PaymentStatusProducer paymentStatusProducer;
+    private final PaymentCancelProducer paymentCancelProducer;
+    private final PaymentRequestProducer paymentRequestProducer;
 
     //    RestClient
-    PortOneClient portOneClient;
+    private final PortOneClient portOneClient;
 
     @Transactional
     public void paymentCancel(String paymentId, Long userId) {
@@ -342,4 +343,5 @@ public class PaymentOrchestrationService {
         }
         log.info("✅ Wallet & Ledger 저장 및 업데이트 완료");
     }
+
 }

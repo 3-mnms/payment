@@ -12,11 +12,18 @@ import com.teckit.payment.util.PaymentOrderStatusUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import static com.teckit.payment.enumeration.PaymentOrderStatus.POINT_CHARGE_PAID;
+import static com.teckit.payment.enumeration.PaymentOrderStatus.POINT_PAYMENT_PAID;
 
 @Slf4j
 @Service
@@ -94,5 +101,13 @@ public class PaymentOrderService {
         return paymentOrderRepository.existsByPaymentId(paymentId);
     }
 
-
+    public Page<PaymentOrder> getTekcitPayHistory(Long userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return paymentOrderRepository
+                .findByBuyerIdAndPaymentOrderStatusInAndLedgerUpdatedTrueAndWalletUpdatedTrue(
+                        userId,
+                        List.of(POINT_PAYMENT_PAID, POINT_CHARGE_PAID),
+                        pageable
+                );
+    }
 }

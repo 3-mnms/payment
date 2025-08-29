@@ -15,4 +15,5 @@ public interface TekcitPayAccountRepository extends JpaRepository<TekcitPayAccou
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select a from TekcitPayAccount a where a.userId = :userId")
     Optional<TekcitPayAccount> findByIdForUpdate(Long userId);
+
 }
