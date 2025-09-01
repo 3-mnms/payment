@@ -15,5 +15,5 @@ public class PayByTekcitPayDTO {
     private String paymentId;
 
     @NotNull
-    private Long password;
+    private String password;
 }
