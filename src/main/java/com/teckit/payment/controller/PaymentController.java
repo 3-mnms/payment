@@ -31,6 +31,11 @@ public class PaymentController {
     private final PaymentOrchestrationService paymentOrchestrationService;
     private final PaymentOrderService paymentOrderService;
 
+    @Operation(
+            summary = "payment id를 이용한 결제 환불 기능",
+            description = "결제 환불 API"
+
+    )
     @PostMapping("/refund/{paymentId}")
     public ResponseEntity<SuccessResponse<String>> paymentCancel(@PathVariable String paymentId,
                                                                  @RequestHeader("X-User-Id") String userIdHeader){
@@ -40,9 +45,13 @@ public class PaymentController {
         return ApiResponseUtil.success();
     }
 
+    @Operation(
+            summary = "FESTIVAL ID를 이용한 결제 정보 조회 API",
+            description = "결제 정보 조회 API"
+
+    )
     @GetMapping("/{festivalId}")
     public ResponseEntity<SuccessResponse<List<PaymentOrderDTO>>> getPaymentOrder(@PathVariable String festivalId,
-                                                                                  @RequestHeader("Authorization") String authHeader,
                                                                                   @RequestHeader("X-User-Id") String userIdHeader
     ) {
         Long userId = Long.parseLong(userIdHeader); // 또는 Long.valueOf(userIdHeader)
@@ -73,6 +82,9 @@ public class PaymentController {
     }
 
     @PostMapping("/webhook")
+    @Operation(
+            summary = "이건 프론트가 쓸 일 없음"
+    )
     public ResponseEntity<SuccessResponse<String>> webhookHandler(@RequestBody PortoneWebhookDTO payload,
                                                                   @RequestHeader("webhook-id") String webhookId,
                                                                   @RequestHeader("webhook-signature") String webhookSignature,
@@ -87,6 +99,9 @@ public class PaymentController {
     }
 
     @PostMapping("/complete/{paymentId}")
+    @Operation(
+            summary = "결제 완료 확인 API"
+    )
     public ResponseEntity<SuccessResponse<String>> completeConfirm(@PathVariable String paymentId) {
         log.info("👩🏻‍🦰 결제 완료 요청 발생");
 
