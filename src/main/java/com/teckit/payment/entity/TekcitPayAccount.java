@@ -23,7 +23,7 @@ public class TekcitPayAccount {
     private LocalDateTime updatedAt;
 
     @Column(name="password",nullable = false)
-    private Long password;
+    private String password;
 
     @PrePersist
     @PreUpdate
