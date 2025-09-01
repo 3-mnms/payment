@@ -52,7 +52,7 @@ public class PaymentOrder {
     private PayMethodType payMethod;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_type")
+    @Column(name = "payment_type", length = 32, nullable = false)
     private PaymentType paymentType;
 
     //    추후 enum 으로 변경

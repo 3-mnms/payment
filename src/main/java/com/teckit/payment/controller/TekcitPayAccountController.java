@@ -2,6 +2,7 @@ package com.teckit.payment.controller;
 
 import com.teckit.payment.dto.request.CreateRequestDTO;
 import com.teckit.payment.dto.request.PayByTekcitPayDTO;
+import com.teckit.payment.dto.request.TransferRequestDTO;
 import com.teckit.payment.dto.response.PaymentOrderDTO;
 import com.teckit.payment.dto.response.TekcitPayAccountResponseDTO;
 import com.teckit.payment.exception.global.SuccessResponse;
@@ -57,5 +58,14 @@ public class TekcitPayAccountController {
         Page<PaymentOrderDTO> histories = tekcitPayAccountService.getTekcitPayHistory(userId, page, size).map(PaymentOrderDTO::fromPaymentOrder);
 
         return ApiResponseUtil.success(histories);
+    }
+    @PostMapping("/transfer")
+    public ResponseEntity<SuccessResponse<Void>> transferToAnotherPerson(
+            @Valid @RequestBody TransferRequestDTO dto,
+            @RequestHeader("X-User-Id") String userIdHeader
+            ){
+        Long buyerId = Long.parseLong(userIdHeader);
+        tekcitPayAccountService.transferToAnotherPerson(dto,buyerId);
+        return ApiResponseUtil.success();
     }
 }

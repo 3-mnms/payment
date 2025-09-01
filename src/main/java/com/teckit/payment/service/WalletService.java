@@ -17,7 +17,7 @@ public class WalletService {
     private final WalletRepository walletRepository;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
-    public boolean saveAndUpdateWallet(WalletDTO walletDTO, PaymentOrder order) {
+    public boolean saveAndUpdateWallet(WalletDTO walletDTO) {
         Wallet buyer = walletRepository.findById(walletDTO.getBuyerId())
                 .orElseGet(() -> new Wallet(walletDTO.getBuyerId()));
         Wallet seller = walletRepository.findById(walletDTO.getSellerId())

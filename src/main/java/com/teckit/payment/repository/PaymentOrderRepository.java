@@ -32,4 +32,5 @@ public interface PaymentOrderRepository extends JpaRepository<PaymentOrder, Stri
             Collection<PaymentOrderStatus> statuses,
             Pageable pageable
     );
+    Optional<PaymentOrder> findByBookingId(String bookingId);
 }

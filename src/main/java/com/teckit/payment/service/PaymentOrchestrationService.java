@@ -333,7 +333,7 @@ public class PaymentOrchestrationService {
 
         boolean walletDone = false;
         try {
-            walletDone = walletService.saveAndUpdateWallet(walletDTO, order);
+            walletDone = walletService.saveAndUpdateWallet(walletDTO);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
