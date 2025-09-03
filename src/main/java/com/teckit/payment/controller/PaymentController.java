@@ -5,6 +5,7 @@ import com.teckit.payment.dto.request.PaymentRequestDTO;
 import com.teckit.payment.dto.request.PortoneWebhookDTO;
 //import com.teckit.payment.kafka.producer.PaymentEventProducer;
 import com.teckit.payment.dto.response.PaymentOrderDTO;
+import com.teckit.payment.entity.PaymentOrder;
 import com.teckit.payment.exception.BusinessException;
 import com.teckit.payment.exception.ErrorCode;
 import com.teckit.payment.exception.global.SuccessResponse;
@@ -52,12 +53,21 @@ public class PaymentController {
     )
 //    dto에 결제 상태 (PAID만)
     @GetMapping("/{festivalId}")
-    public ResponseEntity<SuccessResponse<List<PaymentOrderDTO>>> getPaymentOrder(@PathVariable String festivalId,
+    public ResponseEntity<SuccessResponse<List<PaymentOrderDTO>>> getPaymentOrderByFestivalId(@PathVariable String festivalId,
                                                                                   @RequestHeader("X-User-Id") String userIdHeader
     ) {
         Long userId = Long.parseLong(userIdHeader); // 또는 Long.valueOf(userIdHeader)
         List<PaymentOrderDTO> paymentOrderList = paymentOrderService.getPaymentOrderByFestivalId(festivalId,userId);
         return ApiResponseUtil.success(paymentOrderList);
+    }
+
+    @GetMapping("/{bookingId}")
+    public ResponseEntity<SuccessResponse<PaymentOrderDTO>> getPaymentOrderByBookingId(@PathVariable String bookingId,
+                                                                                  @RequestHeader("X-User-Id") String userIdHeader
+    ) {
+        Long userId = Long.parseLong(userIdHeader); // 또는 Long.valueOf(userIdHeader)
+        PaymentOrder paymentOrder = paymentOrderService.getPaymentOrderByBookingId(bookingId,userId);
+        return ApiResponseUtil.success(PaymentOrderDTO.fromPaymentOrder(paymentOrder));
     }
 
 

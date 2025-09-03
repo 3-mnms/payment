@@ -31,7 +31,13 @@ import static com.teckit.payment.enumeration.PaymentOrderStatus.POINT_PAYMENT_PA
 public class PaymentOrderService {
     private final PaymentOrderRepository paymentOrderRepository;
 
+    @Transactional(readOnly = true)
     public PaymentOrder getPaymentOrderByBookingId(String bookingId){
+        return paymentOrderRepository.findByBookingId(bookingId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
+    }
+    @Transactional(readOnly = true)
+    public PaymentOrder getPaymentOrderByBookingId(String bookingId,Long userId){
         return paymentOrderRepository.findByBookingId(bookingId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
     }
@@ -102,6 +108,8 @@ public class PaymentOrderService {
                             .build();
                 }).toList();
     }
+
+
 
     public boolean getExistByPaymentId(String paymentId) {
         return paymentOrderRepository.existsByPaymentId(paymentId);
