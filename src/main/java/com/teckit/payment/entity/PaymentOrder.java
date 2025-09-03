@@ -24,7 +24,7 @@ public class PaymentOrder {
     @Column(name = "payment_id",nullable = false)
     private String paymentId;
 
-    @Column(name="booking_id",nullable = false)
+    @Column(name="booking_id")
     private String bookingId;
 
     @Column(name = "tx_id")
