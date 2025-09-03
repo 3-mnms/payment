@@ -36,11 +36,7 @@ public class PaymentOrderService {
         return paymentOrderRepository.findByBookingId(bookingId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
     }
-    @Transactional(readOnly = true)
-    public PaymentOrder getPaymentOrderByBookingId(String bookingId,Long userId){
-        return paymentOrderRepository.findByBookingId(bookingId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
-    }
+
 
     public PaymentOrder getPaymentOrderByPaymentId(String paymentId) {
         return paymentOrderRepository.findByPaymentId(paymentId)
