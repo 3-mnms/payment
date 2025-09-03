@@ -66,7 +66,7 @@ public class PaymentController {
                                                                                   @RequestHeader("X-User-Id") String userIdHeader
     ) {
         Long userId = Long.parseLong(userIdHeader); // 또는 Long.valueOf(userIdHeader)
-        PaymentOrder paymentOrder = paymentOrderService.getPaymentOrderByBookingId(bookingId,userId);
+        PaymentOrder paymentOrder = paymentOrderService.getPaymentOrderByBookingId(bookingId);
         return ApiResponseUtil.success(PaymentOrderDTO.fromPaymentOrder(paymentOrder));
     }
 
