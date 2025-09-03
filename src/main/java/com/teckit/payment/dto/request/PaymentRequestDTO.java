@@ -20,7 +20,6 @@ public class PaymentRequestDTO {
     private String paymentId;
 
 //    예매 번호
-    @NotBlank
     private String bookingId;
 
     //공연 정보

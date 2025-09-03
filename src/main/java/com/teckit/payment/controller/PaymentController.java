@@ -50,6 +50,7 @@ public class PaymentController {
             description = "결제 정보 조회 API"
 
     )
+//    dto에 결제 상태 (PAID만)
     @GetMapping("/{festivalId}")
     public ResponseEntity<SuccessResponse<List<PaymentOrderDTO>>> getPaymentOrder(@PathVariable String festivalId,
                                                                                   @RequestHeader("X-User-Id") String userIdHeader

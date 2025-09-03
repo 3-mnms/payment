@@ -19,6 +19,7 @@ public class PaymentOrderDTO {
     private String currency;
     private PayMethodType payMethod;
     private LocalDateTime payTime;
+    private String paymentStatus;
 
     public static PaymentOrderDTO fromPaymentOrder(PaymentOrder paymentOrder){
         return PaymentOrderDTO.builder()
