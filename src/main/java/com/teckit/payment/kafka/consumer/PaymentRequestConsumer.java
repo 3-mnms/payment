@@ -31,7 +31,7 @@ public class PaymentRequestConsumer {
         //        sellerId와 buyerId, 즉 자신에게 양도 혹은 자신의 상품을 구매하는 것은 block
 //        PaymentRequest -> PaymentEvent
 
-        log.info("PaymentRequestDTO : {}",dto.toString());
+        log.info("PaymentRequest 수신 완료 : {}",dto.toString());
         PaymentEventMessageDTO event = PaymentEventMessageDTO.fromPaymentRequest(dto);
 
         if (dto.getPaymentRequestType() == PaymentOrderStatus.POINT_CHARGE_REQUESTED) {

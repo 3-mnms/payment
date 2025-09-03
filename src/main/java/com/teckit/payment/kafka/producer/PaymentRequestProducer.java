@@ -22,6 +22,6 @@ public class PaymentRequestProducer {
 
     public void send(PaymentRequestDTO dto) {
         paymentRequestKafkaTemplate.send(topic, dto.getPaymentId(), dto );
-        log.info("✅ PaymentStatus 전송 완료: " + dto.toString());
+        log.info("✅ PaymentRequest 전송 완료: " + dto.toString());
     }
 }
