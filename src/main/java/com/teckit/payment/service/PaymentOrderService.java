@@ -98,6 +98,7 @@ public class PaymentOrderService {
                             .currency(po.getCurrency())
                             .payMethod(po.getPayMethod())
                             .payTime(po.getLastUpdatedAt())
+                            .paymentStatus(PaymentOrderStatusUtil.extractSuffix(po.getPaymentOrderStatus()))
                             .build();
                 }).toList();
     }
