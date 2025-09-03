@@ -2,6 +2,8 @@ package com.teckit.payment.dto.response;
 
 import com.teckit.payment.entity.PaymentOrder;
 import com.teckit.payment.enumeration.PayMethodType;
+import com.teckit.payment.util.ApiResponseUtil;
+import com.teckit.payment.util.PaymentOrderStatusUtil;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,6 +30,7 @@ public class PaymentOrderDTO {
                 .currency(paymentOrder.getCurrency())
                 .payMethod(paymentOrder.getPayMethod())
                 .payTime(paymentOrder.getLastUpdatedAt())
+                .paymentStatus(PaymentOrderStatusUtil.extractSuffix(paymentOrder.getPaymentOrderStatus()))
                 .build();
     }
 }
