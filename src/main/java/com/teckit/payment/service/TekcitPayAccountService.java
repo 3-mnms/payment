@@ -168,6 +168,7 @@ public class TekcitPayAccountService {
     public void increaseAvailableBalance(Long userId, Long chargedAmount) {
         TekcitPayAccount tekcitPayAccount = tekcitPayAccountRepository.findByIdForUpdate(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_TEKCIT_PAY_ACCOUNT));
+
         tekcitPayAccount.setAvailableBalance(Math.addExact(tekcitPayAccount.getAvailableBalance(), chargedAmount));
         tekcitPayAccountRepository.save(tekcitPayAccount);
     }

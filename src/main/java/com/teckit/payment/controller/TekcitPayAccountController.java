@@ -42,10 +42,10 @@ public class TekcitPayAccountController {
     @Operation(
             summary = "테킷 페이 조회 API",
             description = " "
-
-
     )
     public ResponseEntity<SuccessResponse<TekcitPayAccountResponseDTO>> getTekcitPayAccount(@RequestHeader("X-User-Id") String userIdHeader) {
+        log.info("userIdHeader : {}",userIdHeader);
+
         Long userId = Long.parseLong(userIdHeader);
         TekcitPayAccountResponseDTO tekcitPayAccount = tekcitPayAccountService.getTekcitPayAccountById(userId);
 
