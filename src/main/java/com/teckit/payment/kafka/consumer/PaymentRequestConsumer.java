@@ -29,8 +29,7 @@ public class PaymentRequestConsumer {
     @Transactional
     public void consume(PaymentRequestDTO dto) {
         //        sellerId와 buyerId, 즉 자신에게 양도 혹은 자신의 상품을 구매하는 것은 block
-//        PaymentRequest -> PaymentEvent
-
+        //        PaymentRequest -> PaymentEvent
         log.info("PaymentRequest 수신 완료 : {}",dto.toString());
         PaymentEventMessageDTO event = PaymentEventMessageDTO.fromPaymentRequest(dto);
 
@@ -44,8 +43,6 @@ public class PaymentRequestConsumer {
             paymentEventService.savePaymentEvent(event);
             return;
         }
-
-
 
         paymentEventService.savePaymentEvent(event);
 //        PaymentOrder 초기 생성
