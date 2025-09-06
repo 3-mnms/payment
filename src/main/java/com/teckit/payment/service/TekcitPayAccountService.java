@@ -78,6 +78,7 @@ public class TekcitPayAccountService {
 
         log.info("입력 Commision : {}", dto.getCommission());
         log.info("수수료 금액 : {}", expected);
+
         if (dto.getTotalAmount() <= 0 || expected != dto.getCommission())
             throw new BusinessException(ErrorCode.INVALID_TRANSFER_AMOUNT);
 
