@@ -198,6 +198,8 @@ public class PaymentOrchestrationService {
         PaymentOrder po = paymentOrderRepository.findByPaymentId(paymentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
         log.info("\uD83C\uDF4E po : {}", po.toString());
+
+
         PortoneSingleResponseDTO res = portOneClient.getPayment(paymentId);
 
         if (res == null) {
