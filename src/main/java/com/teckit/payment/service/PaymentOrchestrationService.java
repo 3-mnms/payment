@@ -7,6 +7,7 @@ import com.teckit.payment.entity.*;
 import com.teckit.payment.enumeration.CancellationStatus;
 import com.teckit.payment.enumeration.LedgerTransactionStatus;
 import com.teckit.payment.enumeration.PaymentOrderStatus;
+import com.teckit.payment.enumeration.PaymentType;
 import com.teckit.payment.exception.BusinessException;
 import com.teckit.payment.exception.ErrorCode;
 import com.teckit.payment.kafka.producer.*;
@@ -26,6 +27,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -127,7 +129,8 @@ public class PaymentOrchestrationService {
                 .build();
     }
 
-    private PaymentCancellation handlePointPaymentCancel(PaymentOrder paymentOrder, Long userId) {
+    @Transactional
+    public PaymentCancellation handlePointPaymentCancel(PaymentOrder paymentOrder, Long userId) {
         TekcitPayAccount tekcitAccount = tekcitPayAccountRepository.findByIdForUpdate(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_TEKCIT_PAY_ACCOUNT));
 
@@ -148,7 +151,10 @@ public class PaymentOrchestrationService {
         PaymentOrderStatus updatedStatus=PaymentOrderStatusUtil.withPhase(paymentOrder.getPaymentOrderStatus(),"CANCELLED");
         // 1. 결제 상태 변경
         paymentOrder.setPaymentOrderStatus(updatedStatus);
+        paymentOrder.setPaymentType(PaymentType.REFUND);
         paymentOrderRepository.save(paymentOrder);
+
+        updateLedgerAndWallet(paymentOrder);
 
         // 2. 이벤트 발행
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
@@ -166,8 +172,6 @@ public class PaymentOrchestrationService {
                                 .build()
                 );
 
-                // Ledger 기록 및 Wallet 업데이트
-                updateLedgerAndWallet(paymentOrder);
             }
         });
 
