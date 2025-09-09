@@ -39,7 +39,7 @@ public class PaymentCancellation {
     @Column(nullable = false)
     private Long amount;
 
-    @Column(name="tax_free_amount", nullable=false)
+    @Column(name="tax_free_amount")
     private Long taxFreeAmount;
 
     @Column(name="vat_amount")
