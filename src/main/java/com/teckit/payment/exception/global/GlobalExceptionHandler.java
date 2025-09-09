@@ -3,6 +3,7 @@ package com.teckit.payment.exception.global;
 import com.teckit.payment.controller.PaymentController;
 import com.teckit.payment.exception.BusinessException;
 import com.teckit.payment.exception.ErrorCode;
+import org.apache.kafka.common.errors.TimeoutException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -22,6 +23,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
         ErrorCode errorCode = e.getErrorCode();
         ErrorResponse response = new ErrorResponse(false, errorCode.name(), errorCode.getMessage());
+        return new ResponseEntity<>(response, errorCode.getStatus());
+    }
+
+    @ExceptionHandler(TimeoutException.class)
+    public ResponseEntity<ErrorResponse> handleTimeoutException(BusinessException e){
+        ErrorCode errorCode = e.getErrorCode();
+        ErrorResponse response =new ErrorResponse(false,errorCode.name(),errorCode.getMessage());
         return new ResponseEntity<>(response, errorCode.getStatus());
     }
 
