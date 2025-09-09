@@ -39,6 +39,8 @@ dependencies {
 	// JSON 직렬화용
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	implementation 'org.springframework.boot:spring-boot-starter-json'
+
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.5'
 //	mariadb
 	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
 
