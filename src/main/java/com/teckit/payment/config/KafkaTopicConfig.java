@@ -12,7 +12,7 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic paymentEventTopic() {
         return TopicBuilder.name("payment-events")
-                .partitions(1)
+                .partitions(3)
                 .replicas(1)
                 .build();
     }
@@ -20,7 +20,7 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic PaymentOrderTopic(){
         return TopicBuilder.name("payment-order-events")
-                .partitions(1)
+                .partitions(3)
                 .replicas(1)
                 .build();
     }
@@ -28,7 +28,7 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic PaymentSettlementCommandTopic(){
         return TopicBuilder.name("payment-settlement-commands")
-                .partitions(1)
+                .partitions(3)
                 .replicas(1)
                 .build();
     }
