@@ -1,5 +1,6 @@
 package com.teckit.payment.controller;
 
+import com.teckit.payment.dto.api.TekcitPayAccountApiSpecification;
 import com.teckit.payment.dto.request.CreateRequestDTO;
 import com.teckit.payment.dto.request.PayByTekcitPayDTO;
 import com.teckit.payment.dto.request.TransferRequestDTO;
@@ -20,14 +21,10 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/api/tekcitpay")
 @Slf4j
-public class TekcitPayAccountController {
+public class TekcitPayAccountController implements TekcitPayAccountApiSpecification {
 
     private final TekcitPayAccountService tekcitPayAccountService;
 
-    @Operation(
-            summary = "테킷 페이 가입 API",
-            description = "비밀 번호는 String"
-    )
     @PostMapping("/create-account")
     public ResponseEntity<SuccessResponse<Void>> createTekcitPayAccount(
             @RequestBody CreateRequestDTO dto,
@@ -39,10 +36,6 @@ public class TekcitPayAccountController {
     }
 
     @GetMapping
-    @Operation(
-            summary = "테킷 페이 조회 API",
-            description = " "
-    )
     public ResponseEntity<SuccessResponse<TekcitPayAccountResponseDTO>> getTekcitPayAccount(@RequestHeader("X-User-Id") String userIdHeader) {
         log.info("userIdHeader : {}",userIdHeader);
 
@@ -52,10 +45,7 @@ public class TekcitPayAccountController {
         return ApiResponseUtil.success(tekcitPayAccount);
     }
 
-    @Operation(
-            summary = "테킷 페이 결제 요청 API",
-            description = "amount : 가격 , paymentId : 랜덤 발생, password : 비밀번호 (string) "
-    )
+
     @PostMapping
     public ResponseEntity<SuccessResponse<Void>> payByTekcitPayAccount(
             @Valid @RequestBody PayByTekcitPayDTO dto, @RequestHeader("X-User-Id") String userIdHeader) {
@@ -65,10 +55,6 @@ public class TekcitPayAccountController {
     }
 
     @GetMapping("/history")
-    @Operation(
-            summary = "테킷 페이 포인트 결제 내역 조회 API",
-            description = "페이징 처리 돼 있음 "
-    )
     public ResponseEntity<SuccessResponse<Page<PaymentOrderDTO>>> getTekcitPayHistory(@RequestHeader("X-User-Id") String userIdHeader,
                                                                      @RequestParam(defaultValue = "0") int page,   // 기본값: 0
                                                                      @RequestParam(defaultValue = "10") int size) {
@@ -79,9 +65,6 @@ public class TekcitPayAccountController {
         return ApiResponseUtil.success(histories);
     }
     @PostMapping("/transfer")
-    @Operation(
-            summary = "양도 API"
-    )
     public ResponseEntity<SuccessResponse<Void>> transferToAnotherPerson(
             @Valid @RequestBody TransferRequestDTO dto,
             @RequestHeader("X-User-Id") String userIdHeader
