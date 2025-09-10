@@ -1,5 +1,6 @@
 package com.teckit.payment.controller;
 
+import com.teckit.payment.dto.api.PaymentApiSpecification;
 import com.teckit.payment.dto.request.PaymentEventMessageDTO;
 import com.teckit.payment.dto.request.PaymentRequestDTO;
 import com.teckit.payment.dto.request.PortoneWebhookDTO;
@@ -26,17 +27,12 @@ import java.util.List;
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
 @Slf4j
-public class PaymentController {
+public class PaymentController implements PaymentApiSpecification {
 //    이것도 나중에 분리
     private final PaymentEventProducer paymentEventProducer;
     private final PaymentOrchestrationService paymentOrchestrationService;
     private final PaymentOrderService paymentOrderService;
 
-    @Operation(
-            summary = "payment id를 이용한 결제 환불 기능",
-            description = "결제 환불 API"
-
-    )
     @PostMapping("/refund/{paymentId}")
     public ResponseEntity<SuccessResponse<String>> paymentCancel(@PathVariable String paymentId,
                                                                  @RequestHeader("X-User-Id") String userIdHeader){
@@ -46,11 +42,6 @@ public class PaymentController {
         return ApiResponseUtil.success();
     }
 
-    @Operation(
-            summary = "FESTIVAL ID를 이용한 결제 정보 조회 API",
-            description = "결제 정보 조회 API"
-
-    )
 //    dto에 결제 상태 (PAID만)
 //    @GetMapping("/{festivalId}")
 //    public ResponseEntity<SuccessResponse<List<PaymentOrderDTO>>> getPaymentOrderByFestivalId(@PathVariable String festivalId,
@@ -72,15 +63,6 @@ public class PaymentController {
 
 
     @PostMapping("/request")
-    @Operation(
-            summary = "결제 요청 API",
-            description = "paymentRequestType = " +
-                    "일반 결제 : GENERAL_PAYMENT_REQUESTED  " +
-                    "테킷 페이 결제 : POINT_PAYMENT_REQUESTED  " +
-                    "포인트 충전 : POINT_CHARGE_REQUESTED" +
-                    "포인트 충전의 경우에는 sellerId,festivalId 안넣어서 줘도 자동으로 들어갑니다."
-
-    )
     public ResponseEntity<SuccessResponse<String>> requestPayment(@RequestBody PaymentRequestDTO dto,
                                                                   @RequestHeader("X-User-Id") String userIdHeader) {
 
@@ -110,9 +92,6 @@ public class PaymentController {
     }
 
     @PostMapping("/complete/{paymentId}")
-    @Operation(
-            summary = "결제 완료 확인 API"
-    )
     public ResponseEntity<SuccessResponse<String>> completeConfirm(@PathVariable String paymentId) {
         log.info("👩🏻‍🦰 결제 완료 요청 발생");
 
