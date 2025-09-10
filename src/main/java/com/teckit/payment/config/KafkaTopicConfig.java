@@ -18,6 +18,14 @@ public class KafkaTopicConfig {
     }
 
     @Bean
+    public NewTopic paymentRequestEventTopic() {
+        return TopicBuilder.name("payment-request-events")
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
     public NewTopic PaymentOrderTopic(){
         return TopicBuilder.name("payment-order-events")
                 .partitions(3)
