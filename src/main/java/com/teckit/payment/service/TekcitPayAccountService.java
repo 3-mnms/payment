@@ -15,6 +15,7 @@ import com.teckit.payment.kafka.producer.PaymentEventProducer;
 import com.teckit.payment.kafka.producer.PaymentSettlementProducer;
 import com.teckit.payment.kafka.producer.PaymentStatusProducer;
 import com.teckit.payment.repository.TekcitPayAccountRepository;
+import com.teckit.payment.util.BCryptEncryptor;
 import com.teckit.payment.util.PaymentOrderStatusUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -158,9 +159,11 @@ public class TekcitPayAccountService {
 
     @Transactional
     public void createTekcitPayAccount(Long id, String password) {
+        String encodedPassword = BCryptEncryptor.encrypt(password);
+
         tekcitPayAccountRepository.save(TekcitPayAccount.builder()
                 .userId(id)
-                .password(password)
+                .password(encodedPassword)
                 .availableBalance(0L)
                 .build());
     }
@@ -183,9 +186,11 @@ public class TekcitPayAccountService {
         TekcitPayAccount tekcitPayAccount = tekcitPayAccountRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_TEKCIT_PAY_ACCOUNT));
 
-        if (!tekcitPayAccount.getPassword().equals(dto.getPassword())) {
-            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
-        }
+        BCryptEncryptor.isMatch(dto.getPassword(), tekcitPayAccount.getPassword());
+
+//        if (!tekcitPayAccount.getPassword().equals(dto.getPassword())) {
+//            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+//        }
 
 //        사용자 계정이랑 일치하지 않을 때,
         if (!tekcitPayAccount.getUserId().equals(userId))
