@@ -162,10 +162,9 @@ public class PaymentOrchestrationService {
             public void afterCommit() {
                 // 환불 준비 이벤트 발행
                 paymentEventProducer.send(PaymentEventMessageDTO.fromPaymentOrder(paymentOrder));
-
                 // 결제 취소 이벤트 발행
-                paymentCancelProducer.send(
-                        PaymentCancelEventDTO.builder()
+                paymentStatusProducer.send(
+                        PaymentStatusDTO.builder()
                                 .method("cancel")
                                 .reservationNumber(paymentOrder.getBookingId())
                                 .success(true)
