@@ -22,8 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.teckit.payment.enumeration.PaymentOrderStatus.POINT_CHARGE_PAID;
-import static com.teckit.payment.enumeration.PaymentOrderStatus.POINT_PAYMENT_PAID;
+import static com.teckit.payment.enumeration.PaymentOrderStatus.*;
 
 @Slf4j
 @Service
@@ -116,7 +115,7 @@ public class PaymentOrderService {
         return paymentOrderRepository
                 .findByBuyerIdAndPaymentOrderStatusInAndLedgerUpdatedTrueAndWalletUpdatedTrue(
                         userId,
-                        List.of(POINT_PAYMENT_PAID, POINT_CHARGE_PAID),
+                        List.of(POINT_PAYMENT_PAID, POINT_CHARGE_PAID,TRANSFER_PAID),
                         pageable
                 );
     }
