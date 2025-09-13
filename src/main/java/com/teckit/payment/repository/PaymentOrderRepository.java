@@ -32,5 +32,7 @@ public interface PaymentOrderRepository extends JpaRepository<PaymentOrder, Stri
             Collection<PaymentOrderStatus> statuses,
             Pageable pageable
     );
+
+    @Query("SELECT p FROM PaymentOrder p WHERE p.bookingId = :bookingId")
     Optional<PaymentOrder> findByBookingId(String bookingId);
 }
