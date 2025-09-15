@@ -113,7 +113,7 @@ public class PaymentOrderService {
     public Page<PaymentOrder> getTekcitPayHistory(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "lastUpdatedAt"));
         return paymentOrderRepository
-                .findByBuyerIdAndPaymentOrderStatusInAndLedgerUpdatedTrueAndWalletUpdatedTrue(
+                .findByBuyerIdOrSellerIdAndPaymentOrderStatusInAndLedgerUpdatedTrueAndWalletUpdatedTrue(
                         userId,
                         List.of(POINT_PAYMENT_PAID, POINT_CHARGE_PAID,TRANSFER_PAID),
                         pageable

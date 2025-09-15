@@ -27,7 +27,14 @@ public interface PaymentOrderRepository extends JpaRepository<PaymentOrder, Stri
     List<PaymentOrder> findByFestivalIdAndBuyerIdAndLedgerUpdatedTrueAndWalletUpdatedTrue(String festivalId, Long buyerId);
 
 
-    Page<PaymentOrder> findByBuyerIdAndPaymentOrderStatusInAndLedgerUpdatedTrueAndWalletUpdatedTrue(
+    @Query("""
+SELECT p FROM PaymentOrder p
+WHERE (p.buyerId = :userId OR p.sellerId = :userId)
+  AND p.paymentOrderStatus IN :statuses
+  AND p.ledgerUpdated = true
+  AND p.walletUpdated = true
+""")
+    Page<PaymentOrder> findByBuyerIdOrSellerIdAndPaymentOrderStatusInAndLedgerUpdatedTrueAndWalletUpdatedTrue(
             Long buyerId,
             Collection<PaymentOrderStatus> statuses,
             Pageable pageable
