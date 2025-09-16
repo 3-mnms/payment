@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
@@ -40,9 +41,13 @@ public class KafkaConsumerConfig {
 
 //    여러 개의 Consumer Thread가 병렬로 메시지를 처리할 수 있게 하기 위함.
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, PaymentEventMessageDTO> paymentEventKafkaListenerContainerFactory() {
+    public ConcurrentKafkaListenerContainerFactory<String, PaymentEventMessageDTO> paymentEventKafkaListenerContainerFactory(
+//            ConsumerFactory<String, PaymentEventMessageDTO> cf,
+//                                                                                                                             DefaultErrorHandler defaultErrorHandler
+    ) {
         ConcurrentKafkaListenerContainerFactory<String, PaymentEventMessageDTO> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(paymentEventConsumerFactory());
+//        factory.setCommonErrorHandler(defaultErrorHandler);
         return factory;
     }
 

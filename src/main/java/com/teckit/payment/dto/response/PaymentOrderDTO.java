@@ -37,6 +37,7 @@ public class PaymentOrderDTO {
 
     public static PaymentOrderDTO fromPaymentOrder(PaymentOrder paymentOrder, Long currentUserId) {
         String transactionType;
+
         if (paymentOrder.getBuyerId().equals(currentUserId)) {
             transactionType = "CREDIT";
         } else if (paymentOrder.getSellerId().equals(currentUserId)) {

@@ -18,6 +18,7 @@ public class PaymentEventProducer {
     @Value("${app.kafka.topic.payment-event}")
     private String topic;
 
+//    DLQ 처리
     public void send(PaymentEventMessageDTO paymentEventMessageDTO) {
         paymentEventKafkaTemplate.send(topic, paymentEventMessageDTO.getPaymentId() , paymentEventMessageDTO);
         log.info("✅ PaymentEvent 전송 완료: " + paymentEventMessageDTO);
