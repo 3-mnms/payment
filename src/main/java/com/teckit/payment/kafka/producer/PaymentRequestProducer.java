@@ -20,6 +20,7 @@ public class PaymentRequestProducer {
     @Value("${app.kafka.topic.payment-request}")
     private String topic;
 
+//    DLQ 처리
     public void send(PaymentRequestDTO dto) {
         paymentRequestKafkaTemplate.send(topic, dto.getPaymentId(), dto );
         log.info("✅ PaymentRequest 전송 완료: " + dto.toString());

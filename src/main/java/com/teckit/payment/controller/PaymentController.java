@@ -42,16 +42,6 @@ public class PaymentController implements PaymentApiSpecification {
         return ApiResponseUtil.success();
     }
 
-//    dto에 결제 상태 (PAID만)
-//    @GetMapping("/{festivalId}")
-//    public ResponseEntity<SuccessResponse<List<PaymentOrderDTO>>> getPaymentOrderByFestivalId(@PathVariable String festivalId,
-//                                                                                  @RequestHeader("X-User-Id") String userIdHeader
-//    ) {
-//        Long userId = Long.parseLong(userIdHeader); // 또는 Long.valueOf(userIdHeader)
-//        List<PaymentOrderDTO> paymentOrderList = paymentOrderService.getPaymentOrderByFestivalId(festivalId,userId);
-//        return ApiResponseUtil.success(paymentOrderList);
-//    }
-
     @GetMapping("/{bookingId}")
     public ResponseEntity<SuccessResponse<PaymentOrderDTO>> getPaymentOrderByBookingId(@PathVariable String bookingId,
                                                                                   @RequestHeader("X-User-Id") String userIdHeader

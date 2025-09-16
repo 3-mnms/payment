@@ -35,7 +35,7 @@ WHERE (p.buyerId = :userId OR p.sellerId = :userId)
   AND p.walletUpdated = true
 """)
     Page<PaymentOrder> findByBuyerIdOrSellerIdAndPaymentOrderStatusInAndLedgerUpdatedTrueAndWalletUpdatedTrue(
-            Long buyerId,
+            Long userId,
             Collection<PaymentOrderStatus> statuses,
             Pageable pageable
     );

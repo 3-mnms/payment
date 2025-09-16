@@ -17,6 +17,7 @@ public class SettlementCommandConsumer {
             topics = "${app.kafka.topic.settlement-command}",
             groupId="settlement-consumer"
     )
+//    DLQ 처리
     public void consume(SettlementCommandDTO dto){
         log.info("😡Settlement 이벤트 발생");
 

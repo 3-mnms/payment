@@ -22,6 +22,8 @@ public class PaymentRequestConsumer {
     private final PaymentEventService paymentEventService;
     private final PaymentOrderService paymentOrderService;
 
+
+//    DLQ 처리
     @KafkaListener(
             topics = "${app.kafka.topic.payment-request}",
             groupId="payment-request"

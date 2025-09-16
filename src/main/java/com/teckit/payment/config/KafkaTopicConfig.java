@@ -2,6 +2,7 @@ package com.teckit.payment.config;
 
 
 import org.apache.kafka.clients.admin.NewTopic;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.TopicBuilder;
@@ -9,12 +10,20 @@ import org.springframework.kafka.config.TopicBuilder;
 @Configuration
 public class KafkaTopicConfig {
 
+    @Value("${app.kafka.topic.payment-event}")
+    private String paymentEventTopic;
+
     @Bean
     public NewTopic paymentEventTopic() {
         return TopicBuilder.name("payment-events")
                 .partitions(3)
                 .replicas(1)
                 .build();
+    }
+
+    @Bean
+    public NewTopic paymentEventDltTopic() {
+        return TopicBuilder.name(paymentEventTopic + ".DLT").partitions(3).replicas(1).build();
     }
 
     @Bean
