@@ -21,6 +21,7 @@ public enum ErrorCode {
     INVALID_PASSWORD("P015","일치하지 않는 비밀번호입니다.",HttpStatus.NOT_ACCEPTABLE),
     INVALID_PAYMENT_TYPE("P016","유효하지 않은 결제 상태입니다.",HttpStatus.NOT_ACCEPTABLE),
     INVALID_TRANSFER_AMOUNT("P017","유효하지 않은 양도 금액입니다. 사기 ㄴㄴ",HttpStatus.NOT_ACCEPTABLE),
+    INVALID_USER_ROLE("P018","ADMIN 계정이 아닙니다.",HttpStatus.NOT_ACCEPTABLE)
 
     ;
     ;

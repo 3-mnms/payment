@@ -22,6 +22,7 @@ public class PaymentOrderDTO {
     private PayMethodType payMethod;
     private LocalDateTime payTime;
     private String paymentStatus;
+    private String transactionType;
 
     public static PaymentOrderDTO fromPaymentOrder(PaymentOrder paymentOrder){
         return PaymentOrderDTO.builder()
@@ -31,6 +32,27 @@ public class PaymentOrderDTO {
                 .payMethod(paymentOrder.getPayMethod())
                 .payTime(paymentOrder.getLastUpdatedAt())
                 .paymentStatus(PaymentOrderStatusUtil.extractSuffix(paymentOrder.getPaymentOrderStatus()))
+                .build();
+    }
+
+    public static PaymentOrderDTO fromPaymentOrder(PaymentOrder paymentOrder, Long currentUserId) {
+        String transactionType;
+        if (paymentOrder.getBuyerId().equals(currentUserId)) {
+            transactionType = "CREDIT";
+        } else if (paymentOrder.getSellerId().equals(currentUserId)) {
+            transactionType = "DEBIT";
+        } else {
+            transactionType = "UNKNOWN"; // 안전 장치
+        }
+
+        return PaymentOrderDTO.builder()
+                .paymentId(paymentOrder.getPaymentId())
+                .amount(paymentOrder.getAmount())
+                .currency(paymentOrder.getCurrency())
+                .payMethod(paymentOrder.getPayMethod())
+                .payTime(paymentOrder.getLastUpdatedAt())
+                .paymentStatus(PaymentOrderStatusUtil.extractSuffix(paymentOrder.getPaymentOrderStatus()))
+                .transactionType(transactionType)
                 .build();
     }
 }

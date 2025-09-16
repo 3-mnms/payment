@@ -6,6 +6,9 @@ import com.teckit.payment.dto.request.PayByTekcitPayDTO;
 import com.teckit.payment.dto.request.TransferRequestDTO;
 import com.teckit.payment.dto.response.PaymentOrderDTO;
 import com.teckit.payment.dto.response.TekcitPayAccountResponseDTO;
+import com.teckit.payment.entity.PaymentOrder;
+import com.teckit.payment.exception.BusinessException;
+import com.teckit.payment.exception.ErrorCode;
 import com.teckit.payment.exception.global.SuccessResponse;
 import com.teckit.payment.service.TekcitPayAccountService;
 import com.teckit.payment.util.ApiResponseUtil;
@@ -60,7 +63,8 @@ public class TekcitPayAccountController implements TekcitPayAccountApiSpecificat
                                                                      @RequestParam(defaultValue = "10") int size) {
         Long userId = Long.parseLong(userIdHeader);
 
-        Page<PaymentOrderDTO> histories = tekcitPayAccountService.getTekcitPayHistory(userId, page, size).map(PaymentOrderDTO::fromPaymentOrder);
+        Page<PaymentOrderDTO> histories = tekcitPayAccountService.getTekcitPayHistory(userId, page, size)
+                .map(po->PaymentOrderDTO.fromPaymentOrder(po,userId));
 
         return ApiResponseUtil.success(histories);
     }
@@ -72,5 +76,22 @@ public class TekcitPayAccountController implements TekcitPayAccountApiSpecificat
         Long buyerId = Long.parseLong(userIdHeader);
         tekcitPayAccountService.transferToAnotherPerson(dto,buyerId);
         return ApiResponseUtil.success();
+    }
+
+    @GetMapping("/admin/total-amount")
+    public ResponseEntity<SuccessResponse<TekcitPayAccountResponseDTO>> getAdminTekcitPayAccountTotalAmount(@RequestHeader("X-User-Id") String userIdHeader,@RequestHeader("X-User-Role") String userRole) {
+        if(!userRole.equals("ADMIN")) throw new BusinessException(ErrorCode.INVALID_USER_ROLE);
+
+        TekcitPayAccountResponseDTO tekcitPayAccountById = tekcitPayAccountService.getTekcitPayAccountById(1L);
+
+        return ApiResponseUtil.success(tekcitPayAccountById);
+    }
+
+    @GetMapping("/admin/history")
+    public ResponseEntity<SuccessResponse<Page<PaymentOrderDTO>>> getAdminTekcitPayHistory(@RequestHeader("X-User-Role") String userRole,@RequestParam(defaultValue = "0") int page,   // 기본값: 0
+                                                                          @RequestParam(defaultValue = "10") int size) {
+        if(!userRole.equals("ADMIN")) throw new BusinessException(ErrorCode.INVALID_USER_ROLE);
+        Page<PaymentOrderDTO> tekcitPayHistory = tekcitPayAccountService.getTekcitPayHistory(1L, page, size).map(PaymentOrderDTO::fromPaymentOrder);
+        return ApiResponseUtil.success(tekcitPayHistory);
     }
 }
