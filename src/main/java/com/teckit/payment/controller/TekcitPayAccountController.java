@@ -91,7 +91,7 @@ public class TekcitPayAccountController implements TekcitPayAccountApiSpecificat
     public ResponseEntity<SuccessResponse<Page<PaymentOrderDTO>>> getAdminTekcitPayHistory(@RequestHeader("X-User-Role") String userRole,@RequestParam(defaultValue = "0") int page,   // 기본값: 0
                                                                           @RequestParam(defaultValue = "10") int size) {
         if(!userRole.equals("ADMIN")) throw new BusinessException(ErrorCode.INVALID_USER_ROLE);
-        Page<PaymentOrderDTO> tekcitPayHistory = tekcitPayAccountService.getTekcitPayHistory(1L, page, size).map(po->PaymentOrderDTO.fromPaymentOrder(po,1L));
+        Page<PaymentOrderDTO> tekcitPayHistory = tekcitPayAccountService.getTekcitPayHistory(1L, page, size).map(po->PaymentOrderDTO.adminFromPaymentOrder(po,1L));
         return ApiResponseUtil.success(tekcitPayHistory);
     }
 }
