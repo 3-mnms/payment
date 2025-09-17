@@ -37,7 +37,7 @@ public class PaymentController implements PaymentApiSpecification {
     public ResponseEntity<SuccessResponse<String>> paymentCancel(@PathVariable String paymentId,
                                                                  @RequestHeader("X-User-Id") String userIdHeader){
         Long userId = Long.parseLong(userIdHeader); // 또는 Long.valueOf(userIdHeader)
-
+        log.info("userId : {}",userId);
         paymentOrchestrationService.paymentCancel(paymentId,userId);
         return ApiResponseUtil.success();
     }
