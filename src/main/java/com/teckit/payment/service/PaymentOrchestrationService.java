@@ -31,6 +31,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.UUID;
 
 
 //buyer Id랑 판매자 아이디만 받아오면 될 ㄷ스
@@ -149,10 +150,9 @@ public class PaymentOrchestrationService {
 
     private void handlePostCancelProcess(PaymentOrder paymentOrder, PaymentCancellation cancellation) {
         PaymentOrderStatus updatedStatus=PaymentOrderStatusUtil.withPhase(paymentOrder.getPaymentOrderStatus(),"CANCELLED");
-        // 1. 결제 상태 변경
         // 결제 상태를 변경하지 말고 새로운 결제 주문을 생성해줘야 되는데
         PaymentOrder po=PaymentOrder.builder()
-                .paymentId(paymentOrder.getPaymentId())
+                .paymentId(UUID.randomUUID().toString())
                 .bookingId(paymentOrder.getBookingId())
                 .txId(paymentOrder.getTxId())
                 .festivalId(paymentOrder.getFestivalId())
