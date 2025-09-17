@@ -33,6 +33,7 @@ WHERE (p.buyerId = :userId OR p.sellerId = :userId)
   AND p.paymentOrderStatus IN :statuses
   AND p.ledgerUpdated = true
   AND p.walletUpdated = true
+ORDER BY p.lastUpdatedAt DESC
 """)
     Page<PaymentOrder> findByBuyerIdOrSellerIdAndPaymentOrderStatusInAndLedgerUpdatedTrueAndWalletUpdatedTrue(
             Long userId,

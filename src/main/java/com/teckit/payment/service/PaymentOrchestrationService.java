@@ -150,11 +150,26 @@ public class PaymentOrchestrationService {
     private void handlePostCancelProcess(PaymentOrder paymentOrder, PaymentCancellation cancellation) {
         PaymentOrderStatus updatedStatus=PaymentOrderStatusUtil.withPhase(paymentOrder.getPaymentOrderStatus(),"CANCELLED");
         // 1. 결제 상태 변경
-        paymentOrder.setPaymentOrderStatus(updatedStatus);
-        paymentOrder.setPaymentType(PaymentType.REFUND);
-        paymentOrderRepository.save(paymentOrder);
+        // 결제 상태를 변경하지 말고 새로운 결제 주문을 생성해줘야 되는데
+        PaymentOrder po=PaymentOrder.builder()
+                .paymentId(paymentOrder.getPaymentId())
+                .bookingId(paymentOrder.getBookingId())
+                .txId(paymentOrder.getTxId())
+                .festivalId(paymentOrder.getFestivalId())
+                .buyerId(paymentOrder.getBuyerId())
+                .sellerId(paymentOrder.getSellerId())
+                .amount(paymentOrder.getAmount())
+                .currency(paymentOrder.getCurrency())
+                .payMethod(paymentOrder.getPayMethod())
+                .paymentOrderStatus(updatedStatus)
+                .paymentType(PaymentType.REFUND)
+                .ledgerUpdated(paymentOrder.isLedgerUpdated())
+                .walletUpdated(paymentOrder.isWalletUpdated())
+                .lastUpdatedAt(LocalDateTime.now())
+                .build();
 
-        updateLedgerAndWallet(paymentOrder);
+        paymentOrderRepository.save(po);
+        updateLedgerAndWallet(po);
 
         // 2. 이벤트 발행
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

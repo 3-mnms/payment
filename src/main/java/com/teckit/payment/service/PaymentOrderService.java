@@ -115,7 +115,7 @@ public class PaymentOrderService {
         return paymentOrderRepository
                 .findByBuyerIdOrSellerIdAndPaymentOrderStatusInAndLedgerUpdatedTrueAndWalletUpdatedTrue(
                         userId,
-                        List.of(POINT_PAYMENT_PAID, POINT_CHARGE_PAID,TRANSFER_PAID),
+                        List.of(POINT_PAYMENT_PAID, POINT_CHARGE_PAID,TRANSFER_PAID,POINT_PAYMENT_CANCELLED),
                         pageable
                 );
     }

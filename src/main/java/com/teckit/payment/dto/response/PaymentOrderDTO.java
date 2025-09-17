@@ -39,12 +39,16 @@ public class PaymentOrderDTO {
     public static PaymentOrderDTO fromPaymentOrder(PaymentOrder paymentOrder, Long currentUserId) {
         String transactionType;
 
-        if (paymentOrder.getBuyerId().equals(currentUserId)) {
+        String paymentStatus=PaymentOrderStatusUtil.extractSuffix(paymentOrder.getPaymentOrderStatus());
+
+        if (paymentStatus.equals("CANCELLED")) {
+            transactionType = "DEBIT";
+        } else if (paymentOrder.getBuyerId().equals(currentUserId)) {
             transactionType = "CREDIT";
         } else if (paymentOrder.getSellerId().equals(currentUserId)) {
             transactionType = "DEBIT";
         } else {
-            transactionType = "UNKNOWN"; // 안전 장치
+            transactionType = "UNKNOWN";
         }
 
         return PaymentOrderDTO.builder()
@@ -53,7 +57,7 @@ public class PaymentOrderDTO {
                 .currency(paymentOrder.getCurrency())
                 .payMethod(paymentOrder.getPayMethod())
                 .payTime(paymentOrder.getLastUpdatedAt())
-                .paymentStatus(PaymentOrderStatusUtil.extractSuffix(paymentOrder.getPaymentOrderStatus()))
+                .paymentStatus(paymentStatus)
                 .transactionType(transactionType)
                 .build();
     }
