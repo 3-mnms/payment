@@ -43,4 +43,7 @@ ORDER BY p.lastUpdatedAt DESC
 
     @Query("SELECT p FROM PaymentOrder p WHERE p.bookingId = :bookingId")
     Optional<PaymentOrder> findByBookingId(String bookingId);
+
+    Optional<PaymentOrder> findTopByBookingIdOrderByLastUpdatedAtDesc(String bookingId);
+
 }
