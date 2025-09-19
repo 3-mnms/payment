@@ -32,7 +32,7 @@ public class PaymentOrderService {
 
     @Transactional(readOnly = true)
     public PaymentOrder getPaymentOrderByBookingId(String bookingId){
-        return paymentOrderRepository.findByBookingId(bookingId)
+        return paymentOrderRepository.findTopByBookingIdOrderByLastUpdatedAtDesc(bookingId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAYMENT_ID));
     }
 
