@@ -1,0 +1,35 @@
+package com.teckit.payment.enumeration;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+
+import java.util.Locale;
+
+public enum PaymentOrderStatus {
+    // General
+    GENERAL_PAYMENT_REQUESTED,
+    GENERAL_PAYMENT_READY,
+    GENERAL_PAYMENT_PAID,
+    GENERAL_PAYMENT_FAILED,
+    GENERAL_PAYMENT_CANCELLED,
+    GENERAL_PAYMENT_REJECTED,
+
+    // Point Charge
+    POINT_CHARGE_REQUESTED,
+    POINT_CHARGE_READY,
+    POINT_CHARGE_PAID,
+    POINT_CHARGE_FAILED,
+    POINT_CHARGE_CANCELLED,
+    POINT_CHARGE_REJECTED,
+
+    // Point Payment
+    POINT_PAYMENT_REQUESTED,
+    POINT_PAYMENT_READY,
+    POINT_PAYMENT_PAID,
+    POINT_PAYMENT_FAILED,
+    POINT_PAYMENT_CANCELLED,
+    POINT_PAYMENT_REJECTED,
+
+    TRANSFER_READY,
+    TRANSFER_FAILED,
+    TRANSFER_PAID;
+}

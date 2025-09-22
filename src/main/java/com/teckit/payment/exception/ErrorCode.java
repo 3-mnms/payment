@@ -5,8 +5,25 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public enum ErrorCode {
+    NOT_FOUND_PAYMENT_ID("P001","존재하지 않는 결제 정보입니다.",HttpStatus.NOT_FOUND),
+    NOT_INVALID_PAYMNET_BY_PORTONE("P002","포트원에서 결제되지 않은 Payment ID입니다.",HttpStatus.CONFLICT),
+    NOT_EQUAL_CURRENCY_OR_AMOUNT("P003","금액이나 화폐 가치가 포트원 데이터와 일치하지 않습니다.",HttpStatus.CONFLICT),
+    NOT_SETTLED_PAYMENT("P004","정산되지 않은 Payment ID입니다.",HttpStatus.NOT_ACCEPTABLE),
+    EQUALS_SELLER_BUYER("P005","주최자는 주최측 공연을 구매할 수 없습니다.",HttpStatus.NOT_ACCEPTABLE),
+    NOT_PAID_ORDER("P006","결제되지 않은 주문입니다.",HttpStatus.NOT_ACCEPTABLE),
+    NOT_EQUAL_BUYER_ID_AND_USER_ID("P007","결제 정보가 일치하지 않습니다.",HttpStatus.NOT_ACCEPTABLE),
+    FAILED_PAYMENT_CANCEL("P008","환불이 실패했습니다.",HttpStatus.PAYMENT_REQUIRED),
+    NOT_FOUND_WALLET("P009","존재하지 않는 지갑 정보입니다.",HttpStatus.NOT_FOUND),
+    NOT_FOUND_TEKCIT_PAY_ACCOUNT("P010","테킷 페이에 가입되지 않은 사용자입니다.",HttpStatus.NOT_FOUND),
+    NOT_ENOUGH_AVAILABLE_TEKCIT_PAY_POINT("P011","충분하지 않은 테킷 페이 포인트입니다.",HttpStatus.NOT_ACCEPTABLE),
+    INVALID_PAYMENT_STATUS("P013","결제 정보가 일치하지 않습니다.",HttpStatus.CONFLICT),
+    INVALID_AMOUNT("P014","유효하지 않은 금액입니다.",HttpStatus.NOT_ACCEPTABLE),
+    INVALID_PASSWORD("P015","일치하지 않는 비밀번호입니다.",HttpStatus.NOT_ACCEPTABLE),
+    INVALID_PAYMENT_TYPE("P016","유효하지 않은 결제 상태입니다.",HttpStatus.NOT_ACCEPTABLE),
+    INVALID_TRANSFER_AMOUNT("P017","유효하지 않은 양도 금액입니다. 사기 ㄴㄴ",HttpStatus.NOT_ACCEPTABLE),
+    INVALID_USER_ROLE("P018","ADMIN 계정이 아닙니다.",HttpStatus.NOT_ACCEPTABLE)
 
-//    FESTIVAL_NOT_FOUND("F001","입력 ID에 해당하는 페스티벌을 찾을 수 없습니다.",HttpStatus.NOT_FOUND);
+    ;
     ;
 
     private final String code;        // A001, A002 등
